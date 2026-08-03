@@ -12,6 +12,7 @@ current web results are shown with clickable sources.
 - Upload PDF, DOCX, TXT, Markdown, CSV, JSON, and XLSX files.
 - Remove documents and their indexed evidence.
 - Local BGE embeddings with adaptive semantic retrieval.
+- Cross-encoder reranking for final passage relevance.
 - Intent-aware answers for yes/no, where, when, lists, facts, and explanations.
 - Evidence validation and page/record citations.
 - Automatic routing between documents, general chat, and live web search.
@@ -40,7 +41,8 @@ Question + recent chat history
 
 See [docs/PIPELINE.md](docs/PIPELINE.md) for the complete ingestion and query
 pipelines and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for component
-boundaries.
+boundaries. The rejected learned-gating experiment and its held-out results are
+documented in [docs/ANSWERABILITY_EXPERIMENT.md](docs/ANSWERABILITY_EXPERIMENT.md).
 
 ## Quick start
 

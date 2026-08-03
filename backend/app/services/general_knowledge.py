@@ -17,18 +17,18 @@ FACTUAL_STARTERS = {
 
 
 class LocalGeneralKnowledgeProvider:
-    model_name = "Qwen/Qwen2.5-0.5B-Instruct"
-
     def __init__(
         self,
         *,
         api_key: str | None = None,
         api_base_url: str = "https://api.openai.com/v1",
         chat_model: str = "gpt-4.1-mini",
+        local_model: str = "Qwen/Qwen2.5-1.5B-Instruct",
     ) -> None:
         self._api_key = api_key
         self._api_base_url = api_base_url.rstrip("/")
         self._chat_model = chat_model
+        self._local_model = local_model
 
     def answer(
         self,
@@ -51,7 +51,7 @@ class LocalGeneralKnowledgeProvider:
                 "or an approved factual-search provider to enable verified "
                 "general answers."
             )
-        tokenizer, model = _load_model(self.model_name)
+        tokenizer, model = _load_model(self._local_model)
         messages = [
             {
                 "role": "system",
@@ -79,7 +79,7 @@ class LocalGeneralKnowledgeProvider:
         inputs = tokenizer(prompt, return_tensors="pt", truncation=True)
         outputs = model.generate(
             **inputs,
-            max_new_tokens=120,
+            max_new_tokens=180,
             do_sample=False,
             repetition_penalty=1.1,
             pad_token_id=tokenizer.eos_token_id,

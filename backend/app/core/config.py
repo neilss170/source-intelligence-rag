@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     chat_api_key: str | None = None
     chat_api_base_url: str = "https://api.openai.com/v1"
     chat_model: str = "gpt-4.1-mini"
+    local_chat_model: str = "Qwen/Qwen2.5-1.5B-Instruct"
+    reranker_enabled: bool = True
+    reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
     tavily_api_key: str | None = None
     web_search_enabled: bool = True
     search_country: str = "india"

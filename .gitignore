@@ -18,3 +18,5 @@ backend/data/uploads/*
 !backend/data/uploads/.gitkeep
 backend/data/index/*
 !backend/data/index/.gitkeep
+backend/data/metadata/*
+!backend/data/metadata/.gitkeep

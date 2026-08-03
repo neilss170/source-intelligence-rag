@@ -42,8 +42,9 @@ me”. This preserves API credits and reduces tokens.
 2. Embed the query with BGE-small.
 3. Retrieve semantic candidates above the minimum score.
 4. Apply strict entity and attribute guards.
-5. Select adaptive top-k based on question type.
-6. Require lexical topic support before Auto mode uses document evidence.
+5. Rerank candidates with a cross-encoder relevance model.
+6. Select adaptive top-k based on question type.
+7. Require lexical topic support before Auto mode uses document evidence.
 
 ## 5. Answer generation
 

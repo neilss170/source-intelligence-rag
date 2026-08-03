@@ -6,6 +6,7 @@ from pathlib import Path
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
+from sentence_transformers.cross_encoder import CrossEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
@@ -46,6 +47,8 @@ CONTENT_STOPWORDS = {
     "with",
 }
 
+csv.field_size_limit(10 * 1024 * 1024)
+
 
 def _terms(text: str) -> set[str]:
     values = set(re.findall(r"[a-z0-9]+", text.lower()))
@@ -82,6 +85,7 @@ def _build_features(
     documents: dict[str, str],
     rows: list[dict],
     model: SentenceTransformer,
+    cross_encoder: CrossEncoder,
 ) -> np.ndarray:
     document_chunks = {
         document_id: [
@@ -109,9 +113,21 @@ def _build_features(
     features: list[list[float]] = []
     for row, question_embedding in zip(rows, question_embeddings, strict=True):
         document_id = row["document_index"]
-        scores = np.sort(chunk_embeddings[document_id] @ question_embedding)[::-1]
+        raw_scores = chunk_embeddings[document_id] @ question_embedding
+        ranked_indices = np.argsort(-raw_scores)
+        scores = raw_scores[ranked_indices]
         padded = np.pad(scores[:3], (0, max(0, 3 - len(scores))), constant_values=0)
-        best_index = int(np.argmax(chunk_embeddings[document_id] @ question_embedding))
+        best_index = int(ranked_indices[0])
+        rerank_indices = ranked_indices[:3]
+        rerank_scores = np.asarray(
+            cross_encoder.predict(
+                [
+                    (row["question"], document_chunks[document_id][int(index)])
+                    for index in rerank_indices
+                ]
+            ),
+            dtype=np.float32,
+        )
         question_terms = _terms(row["question"])
         best_terms = _terms(document_chunks[document_id][best_index])
         lexical_coverage = (
@@ -126,6 +142,8 @@ def _build_features(
                 float(padded[0] - padded[1]),
                 lexical_coverage,
                 float(len(question_terms)),
+                float(rerank_scores.max()),
+                float(rerank_scores.mean()),
             ]
         )
     return np.asarray(features, dtype=np.float32)
@@ -158,7 +176,8 @@ def main() -> None:
 
     documents, rows = _load_rows(args.dataset_dir)
     model = SentenceTransformer("BAAI/bge-small-en-v1.5")
-    features = _build_features(documents, rows, model)
+    cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+    features = _build_features(documents, rows, model, cross_encoder)
     labels = np.asarray([row["label"] for row in rows], dtype=np.int64)
     document_ids = np.asarray([int(row["document_index"]) for row in rows])
 
@@ -189,6 +208,8 @@ def main() -> None:
             "top_score_margin",
             "lexical_coverage",
             "question_term_count",
+            "reranker_top_score",
+            "reranker_mean_top3_score",
         ],
         "coefficients": classifier.coef_[0].tolist(),
         "intercept": float(classifier.intercept_[0]),
