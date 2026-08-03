@@ -1,0 +1,33 @@
+﻿# Cursor index / @-mention exclusions (gitignore-style globs)
+
+# --- Frontend ---
+node_modules/
+dist/
+
+# --- Python backend ---
+backend/.venv/
+backend/.pytest_cache/
+backend/**/__pycache__/
+backend/**/*.py[cod]
+backend/.mypy_cache/
+backend/.ruff_cache/
+backend/htmlcov/
+backend/.coverage
+
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+
+# --- RAG runtime data (uploads, vector index) ---
+backend/data/uploads/*
+!backend/data/uploads/.gitkeep
+backend/data/index/*
+!backend/data/index/.gitkeep
+
+# --- OS & local logs ---
+.DS_Store
+Thumbs.db
+*.log
+vite.log
+vite-error.log

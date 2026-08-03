@@ -1,0 +1,149 @@
+[
+  {
+    "evidence_id": "ev_summary_001",
+    "section": "summary",
+    "title": "Professional summary",
+    "technologies": ["Java", "Python", "C", "Machine Learning"],
+    "text": "Computer Science undergraduate specializing in Data Science with hands-on experience in machine learning and web application development.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Computer Science undergraduate specializing in Data Science with hands-on experience in machine learning and web-based application development. Strong foundation in Java, Python, and C."}
+  },
+  {
+    "evidence_id": "ev_education_001",
+    "section": "education",
+    "title": "Bachelor of Engineering in Computer Science & Engineering (Data Science)",
+    "organization": "R.V. College of Engineering, Bengaluru",
+    "period": {"label": "2022 — 2026"},
+    "text": "Bachelor of Engineering in Computer Science & Engineering with a Data Science specialization at R.V. College of Engineering, Bengaluru, from 2022 to 2026.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Bachelor of Engineering — Computer Science & Engineering (Data Science) 2022 — 2026 R.V. College of Engineering, Bengaluru"}
+  },
+  {
+    "evidence_id": "ev_education_002",
+    "section": "education",
+    "title": "Senior Secondary (XII) — CBSE",
+    "organization": "Maheshwari Public School JN, Jaipur",
+    "period": {"label": "2022"},
+    "text": "Completed CBSE Senior Secondary education at Maheshwari Public School JN, Jaipur, in 2022.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Senior Secondary (XII) — CBSE 2022 Maheshwari Public School JN, Jaipur"}
+  },
+  {
+    "evidence_id": "ev_education_003",
+    "section": "education",
+    "title": "Secondary (X) — CBSE",
+    "organization": "Maheshwari Public School JN, Jaipur",
+    "period": {"label": "2020"},
+    "text": "Completed CBSE Secondary education at Maheshwari Public School JN, Jaipur, in 2020.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Secondary (X) — CBSE 2020 Maheshwari Public School JN, Jaipur"}
+  },
+  {
+    "evidence_id": "ev_project_diabetes_001",
+    "section": "projects",
+    "title": "Diabetes Prediction Model",
+    "technologies": ["Python", "Flask", "Logistic Regression", "K-Nearest Neighbors"],
+    "text": "Designed a diabetes-risk prediction system from patient health parameters and developed a Flask web application for real-time input and predictions.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Designed and implemented a machine learning-based predictive system to assess diabetes risk using patient health parameters. Developed a Flask-based web application for real-time user input and prediction output."}
+  },
+  {
+    "evidence_id": "ev_project_diabetes_002",
+    "section": "projects",
+    "title": "Diabetes Prediction Model",
+    "technologies": ["Logistic Regression", "K-Nearest Neighbors", "Feature Scaling"],
+    "text": "Trained and evaluated Logistic Regression and K-Nearest Neighbors models, using preprocessing, feature scaling, and model evaluation.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Trained and evaluated models including Logistic Regression and K-Nearest Neighbors to improve prediction accuracy. Performed data preprocessing, feature scaling, and model evaluation to ensure reliable performance."}
+  },
+  {
+    "evidence_id": "ev_project_barrier_001",
+    "section": "projects",
+    "title": "Real-Time Controlled Road Barrier System",
+    "technologies": ["Sensors", "Real-Time Systems", "Traffic Management"],
+    "text": "Developed a movable road-divider concept that dynamically reallocates lanes using real-time traffic density and sensor inputs.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Developed a movable road divider system to dynamically reallocate lanes based on real-time traffic density. Integrated sensor-based inputs for real-time decision-making and adaptive lane control."}
+  },
+  {
+    "evidence_id": "ev_project_barrier_002",
+    "section": "projects",
+    "title": "Real-Time Controlled Road Barrier System",
+    "technologies": ["Smart City", "Traffic Management"],
+    "text": "Proposed traffic-flow optimization to reduce peak-hour congestion, with smart-city and traffic-management applications.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Proposed intelligent traffic flow optimization to reduce congestion during peak hours. Demonstrated applications in smart city infrastructure and traffic management systems."}
+  },
+  {
+    "evidence_id": "ev_project_segmentation_001",
+    "section": "projects",
+    "title": "Customer Segmentation System",
+    "technologies": ["Unsupervised Learning", "K-Means"],
+    "text": "Implemented customer segmentation from purchasing behavior using unsupervised learning and K-Means clustering.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Implemented unsupervised learning techniques to segment customers based on purchasing behavior. Applied clustering algorithms such as K-Means to identify customer groups."}
+  },
+  {
+    "evidence_id": "ev_project_segmentation_002",
+    "section": "projects",
+    "title": "Customer Segmentation System",
+    "technologies": ["Data Analysis", "K-Means"],
+    "text": "Analyzed customer data to support targeted marketing, extract business insights, and improve personalization.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Applied clustering algorithms such as K-Means to identify customer groups for targeted marketing strategies. Analyzed customer data to extract actionable business insights and improve personalization."}
+  },
+  {
+    "evidence_id": "ev_project_delivery_001",
+    "section": "projects",
+    "title": "Intelligent Food Delivery System",
+    "technologies": ["Machine Learning", "Recommendation Systems", "Route Optimization"],
+    "text": "Developed an AI-driven food-delivery platform focused on route optimization and personalized recommendations from user preferences.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Developed an AI-driven food delivery platform focusing on route optimization and personalized recommendations. Applied machine learning techniques to analyze user preferences and improve recommendation accuracy."}
+  },
+  {
+    "evidence_id": "ev_project_delivery_002",
+    "section": "projects",
+    "title": "Intelligent Food Delivery System",
+    "technologies": ["Route Optimization"],
+    "text": "Worked on delivery efficiency by minimizing travel time and operational cost.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Optimized delivery efficiency by minimizing travel time and operational cost."}
+  },
+  {
+    "evidence_id": "ev_skills_programming_001",
+    "section": "skills",
+    "title": "Programming languages",
+    "technologies": ["Java", "Python", "C"],
+    "text": "Programming languages listed on the resume are Java, Python, and C.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Programming: Java, Python, C"}
+  },
+  {
+    "evidence_id": "ev_skills_ml_001",
+    "section": "skills",
+    "title": "Machine-learning skills",
+    "technologies": ["KNN", "Logistic Regression", "Decision Trees", "Random Forest", "SVM"],
+    "text": "Machine-learning skills listed are KNN, Logistic Regression, Decision Trees, Random Forest, and SVM.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Machine Learning: KNN, Logistic Regression, Decision Trees, Random Forest, SVM"}
+  },
+  {
+    "evidence_id": "ev_skills_web_001",
+    "section": "skills",
+    "title": "Web technologies",
+    "technologies": ["HTML5", "CSS3", "Bootstrap"],
+    "text": "Web technologies listed are HTML5, CSS3, and Bootstrap.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Web Technologies: HTML5, CSS3, Bootstrap"}
+  },
+  {
+    "evidence_id": "ev_extracurricular_001",
+    "section": "extracurricular",
+    "title": "Rotaract Club",
+    "organization": "Rotaract Club",
+    "text": "Participated in community service, leadership development, social-welfare projects, and collaborative team activities as a Rotaract Club member.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Rotaract Club Member — Actively participated in community service initiatives and leadership development programs. Engaged in social welfare projects and collaborative team activities."}
+  },
+  {
+    "evidence_id": "ev_certifications_001",
+    "section": "certifications",
+    "title": "Technical certifications",
+    "technologies": ["Linux", "Java", "C", "Edge Computing"],
+    "text": "Certifications include Linux Kernel Programming from Udemy, Java Programming Fundamentals and Programming in C from Infosys Springboard, and Edge Computing from NPTEL.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Linux Kernel Programming — Udemy; Java Programming Fundamentals — Infosys Springboard; Programming in C — Infosys Springboard; Edge Computing — NPTEL"}
+  },
+  {
+    "evidence_id": "ev_certifications_002",
+    "section": "certifications",
+    "title": "Design and web certifications",
+    "technologies": ["Web Essentials", "Design Technology"],
+    "text": "Additional certifications include Design Technology and Innovation from NPTEL and IT and Web Essentials training from RVCE.",
+    "source": {"document_id": "resume_9466a85e", "filename": "candidate_resume.pdf", "page": 1, "source_text": "Design Technology and Innovation — NPTEL; Special Skill Lab Training on IT and Web Essentials — RVCE"}
+  }
+]
