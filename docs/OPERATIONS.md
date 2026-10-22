@@ -167,6 +167,30 @@ without.
   day on one model. List more than one model in `CHAT_FALLBACK_MODELS` or
   `CHAT_MODELS`: each has its own allowance, and the chain moves to the
   next automatically.
+- **A local model as the last fallback** keeps answers coming when every
+  hosted model is out of quota or unreachable. With Ollama on the host, add
+  it at the end of `CHAT_MODELS`, using `http://host.docker.internal:11434/v1`
+  as its base URL. Give it a context window that fits the prompt, which is
+  about 4,000 tokens: Ollama's default is smaller and **silently truncates**,
+  dropping passages. Bake the window into a model variant so it holds
+  however Ollama is started:
+
+  ```bash
+  printf 'FROM nemotron-3-nano:4b
+PARAMETER num_ctx 8192
+' > Modelfile
+  ollama create nemotron-3-nano-8k -f Modelfile
+  ```
+
+  **Measured 2026-10-22** on an RTX 3050 Ti (4 GB): with Groq unreachable,
+  the 4B model answered a cited question in 8.5 s. On the prompt test it got
+  facts and comparisons right with correct citations, and declined an
+  unanswerable question. Expect 5-7 s per answer, plus about 13 s while the
+  model first loads.
+- **Out of quota and unreachable are reported differently.** When hosted
+  models are down (network errors, 5xx), the reply says the model couldn't
+  be reached. "Usage limit reached, try again in N minutes" appears only
+  when quota is actually the cause.
 - **`DAILY_TOKEN_BUDGET_PER_USER`** caps one person's spend; 0 means
   unlimited.
 - **Running evaluations spends real quota.** Three back-to-back full

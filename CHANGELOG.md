@@ -309,3 +309,24 @@ index until milestone 4.
   20 concurrent users). It runs after the text streams, so it doesn't delay
   what people read, but it's the first thing to optimise. Options: batch
   NLI calls across requests, or run the check in the worker.
+
+## After milestone 6: a local fallback model (2026-10-22)
+
+- **Fixed a misleading message.** At 13:04 the api container briefly
+  couldn't reach Groq at all (`ConnectError` on both models), and the reply
+  said "usage limit reached, try again in about 1 minute". The router used
+  the quota message for any failure across the chain, with an invented
+  60-second wait. Network and server failures now give "Couldn't reach the
+  language model just now" (`model_unavailable`), and the quota message
+  appears only when quota is the cause.
+- **A local model is the last fallback.** `nemotron-3-nano-8k`, a variant of
+  `nemotron-3-nano:4b` with an 8,192-token context so prompts aren't
+  silently truncated, runs in Ollama on the host. The api reaches it at
+  `host.docker.internal` (`extra_hosts` added for Linux).
+  - **Prompt test:** facts and comparisons right with correct citations, and
+    a correct abstention, at 5-7 s per answer.
+  - **Live failover through the app, with both Groq models unreachable:** a
+    correct, cited answer from the local model in 8.5 s.
+- **Tests:** 3 new, 211 in total. They cover an outage reported as such, a
+  chain falling through two unreachable models to a local one, and the
+  service's `model_unavailable` reply.

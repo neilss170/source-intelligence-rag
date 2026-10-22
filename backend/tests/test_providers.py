@@ -231,3 +231,44 @@ def test_model_options_are_sent_with_each_request() -> None:
     assert model_chain(
         Settings(chat_api_key="k", chat_models="", chat_reasoning_effort="low")
     )[0].options == {"reasoning_effort": "low"}
+
+
+def _unreachable_then(answers: dict):
+    """A transport where some models can't be reached at all."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        model = json.loads(request.content)["model"]
+        if model not in answers:
+            raise httpx.ConnectError("network is unreachable")
+        return httpx.Response(200, content=openai_stream(answers[model]))
+
+    return httpx.MockTransport(handler)
+
+
+def test_a_network_outage_is_not_reported_as_quota() -> None:
+    from app.chat.providers import ModelsUnavailable
+
+    chain = ModelRouter(
+        [BIG, SMALL], ExhaustionStore(None), transport=_unreachable_then({})
+    )
+
+    with pytest.raises(ModelsUnavailable):
+        run(chain.complete("s", "u"))
+
+
+def test_a_local_model_answers_when_the_hosted_ones_are_unreachable() -> None:
+    local = ModelSpec(
+        "nemotron-3-nano-8k", "http://host.docker.internal:11434/v1", None
+    )
+    chain = ModelRouter(
+        [BIG, SMALL, local],
+        ExhaustionStore(None),
+        transport=_unreachable_then({"nemotron-3-nano-8k": "answered locally"}),
+    )
+
+    completion = run(chain.complete("s", "u"))
+
+    assert (completion.text, completion.model) == (
+        "answered locally",
+        "nemotron-3-nano-8k",
+    )

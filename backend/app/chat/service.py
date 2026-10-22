@@ -29,7 +29,13 @@ from typing import Literal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.chat.providers import AllModelsExhausted, ModelRouter, ProviderError, Usage
+from app.chat.providers import (
+    AllModelsExhausted,
+    ModelRouter,
+    ModelsUnavailable,
+    ProviderError,
+    Usage,
+)
 from app.chat.stream_citations import StreamingCitations
 from app.chat.usage import record_usage, tokens_used_today
 from app.core.config import Settings
@@ -170,6 +176,18 @@ class ChatService:
         try:
             async for event in self._answer(turn, history, files, outcome):
                 yield event
+        except ModelsUnavailable:
+            _report(turn, outcome, "model_unavailable")
+            yield sse(
+                "error",
+                {
+                    "code": "model_unavailable",
+                    "message": "Couldn't reach the language model just now. Check "
+                    "the connection and try again.",
+                },
+            )
+            await asyncio.to_thread(self._record_calls, turn, outcome)
+            return
         except AllModelsExhausted as exc:
             _report(turn, outcome, "model_quota")
             yield sse(
@@ -441,7 +459,7 @@ class ChatService:
                 f"--- FOLLOW-UP QUESTION ---\n{question}",
                 max_tokens=1024,
             )
-        except (ProviderError, AllModelsExhausted) as exc:
+        except (ProviderError, AllModelsExhausted, ModelsUnavailable) as exc:
             logger.warning("Searching the question as typed; rewrite failed: %s", exc)
             return question
         finally:
