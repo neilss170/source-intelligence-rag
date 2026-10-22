@@ -26,9 +26,11 @@ problems = []
 def watch(page):
     page.on(
         "console",
-        lambda m: problems.append(f"{m.type}: {m.text[:200]}")
-        if m.type in ("error", "warning")
-        else None,
+        lambda m: (
+            problems.append(f"{m.type}: {m.text[:200]}")
+            if m.type in ("error", "warning")
+            else None
+        ),
     )
     page.on("pageerror", lambda e: problems.append(f"pageerror: {e}"))
 
@@ -56,7 +58,9 @@ with sync_playwright() as p:
     print("greeting:", page.locator(".greeting h1").inner_text().replace("\n", " "))
 
     page.locator("input[type=file]").set_input_files(str(REPORT))
-    expect(page.locator(".doc-pill")).to_have_text(re.compile(r"^\s*1 document$"), timeout=60000)
+    expect(page.locator(".doc-pill")).to_have_text(
+        re.compile(r"^\s*1 document$"), timeout=60000
+    )
     print("document pill:", page.locator(".doc-pill").inner_text())
 
     textarea = page.get_by_label("Ask a question")
@@ -77,14 +81,19 @@ with sync_playwright() as p:
         page.wait_for_timeout(50)
     elapsed = round(time.time() - started, 1)
     growth = sorted(set(lengths))
-    print(f"status shown: {status_seen!r}; answer grew through {len(growth)} sizes; done in {elapsed}s")
+    print(
+        f"status shown: {status_seen!r}; answer grew through {len(growth)} "
+        f"sizes; done in {elapsed}s"
+    )
     print("answer:", page.locator(".answer-copy").first.inner_text()[:150])
     page.get_by_role("button", name="1 source").or_(
         page.get_by_role("button", name="2 sources")
     ).first.click()
     page.screenshot(path=str(OUT / "ui-2-answer.png"))
 
-    textarea.fill("Summarise every section of the report in detail, one paragraph each.")
+    textarea.fill(
+        "Summarise every section of the report in detail, one paragraph each."
+    )
     textarea.press("Enter")
     stop = page.get_by_role("button", name="Stop answering")
     expect(stop).to_be_visible()
@@ -94,9 +103,15 @@ with sync_playwright() as p:
     print("stop button: answer marked Stopped")
 
     page.reload(wait_until="networkidle")
-    page.get_by_role("button", name="How did workplace injuries", exact=False).first.click()
+    page.get_by_role(
+        "button", name="How did workplace injuries", exact=False
+    ).first.click()
     expect(page.locator(".question").first).to_contain_text("workplace injuries")
-    print("after reload, chat restored with", page.locator(".question").count(), "question(s)")
+    print(
+        "after reload, chat restored with",
+        page.locator(".question").count(),
+        "question(s)",
+    )
 
     page.get_by_role("button", name="Sign out").click()
     expect(page.get_by_role("heading", name="Welcome back")).to_be_visible()
