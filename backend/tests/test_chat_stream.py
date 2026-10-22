@@ -352,3 +352,19 @@ def test_the_question_is_stored_even_when_answering_fails(chat, db) -> None:
 def _reset_overrides():
     yield
     app.dependency_overrides.pop(get_chat_service, None)
+
+
+def test_a_question_while_files_are_indexing_says_so(chat, ingestion) -> None:
+    _, _, script, ask, upload = chat
+    ingestion.fail = True  # accepted, but not indexed yet
+    upload("report.md", REPORT)
+    model = script("never sent")
+
+    events = ask("How big is the fleet?")
+
+    assert tokens(events) == (
+        "report.md is still being indexed. Ask again in a moment and I'll "
+        "answer from it."
+    )
+    assert events[-1][1]["mode"] == "indexing"
+    assert model.prompts == []

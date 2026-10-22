@@ -191,3 +191,45 @@ index until milestone 4.
   rewriting, budgets, quota exhaustion, claim verification, hidden
   characters, provider parsing (OpenAI and Anthropic formats), the fallback
   chain, shared quota state in Redis and model configuration.
+
+## Milestone 5: Frontend (2026-10-22)
+
+- **Accounts in the UI:** sign-in and sign-up screens in the dark design.
+  API errors appear as written ("Use a password of at least 10
+  characters"). A session that ends returns you to sign-in. The greeting
+  uses the signed-in user's first name; the hard-coded "Neil" is gone.
+  Sign out lives in the sidebar's account row.
+- **Everything is on the server:** chats, messages and documents come from
+  the API, so browser storage is no longer used. A chat is created with its
+  first question, so empty chats don't pile up, and it is titled from that
+  question. Rename and delete work against the server.
+- **Streaming answers:** tokens appear as they arrive, with a caret, and
+  the live status sits beside the thinking dots ("Searching your
+  documents", "Running a query on your spreadsheet"). Citations,
+  verification and the final stored text arrive as events. The send button
+  becomes a stop button; a stopped answer keeps what it had and says
+  "Stopped". Failed answers show the reason and a Retry button, except when
+  the daily budget is spent.
+- **Documents:** upload progress shows as a percentage and a thin bar.
+  Badges show "Indexing…" and "Failed" with the reason underneath, and the
+  list polls while anything is indexing. The top pill counts ready
+  documents or says what is indexing.
+- **Fixed, found by driving the real UI:** a question asked while the only
+  document was still indexing was answered as general chat ("I don't have
+  any data on…"), which reads as "your file doesn't say". It now replies
+  that the file is still being indexed.
+- **Accessibility:** labelled controls, a radio group for the answer
+  source, a polite live region for the thread, `aria-busy` while
+  streaming, a progressbar role for uploads, and `aria-current` on the open
+  chat.
+- **Verified in a real browser through nginx** (`e2e/ui_flow.py`):
+  - sign-up validation and the personal greeting;
+  - upload, then indexing, then ready;
+  - a streamed, cited answer in 2.3 s with the status shown first;
+  - stop;
+  - reload restoring the chat;
+  - sign out and back in;
+  - a phone-width render;
+  - no CSP or script errors. The only console entry is the expected 401
+    from checking for a session before signing in.
+- **Tests:** 1 new backend test (199 in total) plus the browser flow.
