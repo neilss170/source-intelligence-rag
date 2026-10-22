@@ -123,5 +123,5 @@ def test_ingests_xlsx_worksheets(tmp_path: Path) -> None:
     result = service.ingest("products.xlsx", buffer.getvalue())
 
     assert result.evidence_count == 1
-    assert "Worksheet: Products" in repository.load()[0].text
+    assert repository.load()[0].title == "products > Worksheet: Products"
     assert "name: Keyboard" in repository.load()[0].text

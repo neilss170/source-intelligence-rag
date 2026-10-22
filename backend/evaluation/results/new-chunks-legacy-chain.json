@@ -1,0 +1,342 @@
+{
+  "corpus": {
+    "passages": 139,
+    "characters": 26323
+  },
+  "retrieval": {
+    "questions": 40,
+    "recall_at_k": 0.9,
+    "recall_at_1": 0.9,
+    "mrr": 0.9,
+    "mean_passages_returned": 1,
+    "p50_ms": 216.0,
+    "misses": [
+      "d06",
+      "d08",
+      "d25",
+      "d45"
+    ],
+    "rows": [
+      {
+        "id": "d01",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 208
+      },
+      {
+        "id": "d02",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 208
+      },
+      {
+        "id": "d03",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 241
+      },
+      {
+        "id": "d04",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 249
+      },
+      {
+        "id": "d05",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 231
+      },
+      {
+        "id": "d06",
+        "hits": 1,
+        "recall_at_k": false,
+        "recall_at_1": false,
+        "reciprocal_rank": 0.0,
+        "ms": 76
+      },
+      {
+        "id": "d07",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 198
+      },
+      {
+        "id": "d08",
+        "hits": 1,
+        "recall_at_k": false,
+        "recall_at_1": false,
+        "reciprocal_rank": 0.0,
+        "ms": 189
+      },
+      {
+        "id": "d09",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 225
+      },
+      {
+        "id": "d10",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 215
+      },
+      {
+        "id": "d11",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 217
+      },
+      {
+        "id": "d12",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 223
+      },
+      {
+        "id": "d13",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 244
+      },
+      {
+        "id": "d14",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 263
+      },
+      {
+        "id": "d15",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 226
+      },
+      {
+        "id": "d16",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 228
+      },
+      {
+        "id": "d17",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 239
+      },
+      {
+        "id": "d18",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 247
+      },
+      {
+        "id": "d19",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 190
+      },
+      {
+        "id": "d20",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 213
+      },
+      {
+        "id": "d21",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 176
+      },
+      {
+        "id": "d22",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 233
+      },
+      {
+        "id": "d23",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 242
+      },
+      {
+        "id": "d24",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 237
+      },
+      {
+        "id": "d25",
+        "hits": 1,
+        "recall_at_k": false,
+        "recall_at_1": false,
+        "reciprocal_rank": 0.0,
+        "ms": 226
+      },
+      {
+        "id": "d26",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 129
+      },
+      {
+        "id": "d27",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 130
+      },
+      {
+        "id": "d28",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 217
+      },
+      {
+        "id": "d29",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 122
+      },
+      {
+        "id": "d30",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 122
+      },
+      {
+        "id": "d31",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 138
+      },
+      {
+        "id": "d32",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 134
+      },
+      {
+        "id": "d33",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 133
+      },
+      {
+        "id": "d34",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 148
+      },
+      {
+        "id": "d35",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 223
+      },
+      {
+        "id": "d36",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 222
+      },
+      {
+        "id": "d37",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 113
+      },
+      {
+        "id": "d38",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 122
+      },
+      {
+        "id": "d39",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 217
+      },
+      {
+        "id": "d45",
+        "hits": 1,
+        "recall_at_k": false,
+        "recall_at_1": false,
+        "reciprocal_rank": 0.0,
+        "ms": 88
+      }
+    ]
+  }
+}

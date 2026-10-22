@@ -1,0 +1,950 @@
+{
+  "corpus": {
+    "passages": 132,
+    "characters": 26791
+  },
+  "retrieval": {
+    "questions": 40,
+    "recall_at_k": 0.875,
+    "recall_at_1": 0.875,
+    "mrr": 0.875,
+    "mean_passages_returned": 1,
+    "p50_ms": 209.0,
+    "misses": [
+      "d06",
+      "d25",
+      "d37",
+      "d38",
+      "d45"
+    ],
+    "rows": [
+      {
+        "id": "d01",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 200
+      },
+      {
+        "id": "d02",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 213
+      },
+      {
+        "id": "d03",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 212
+      },
+      {
+        "id": "d04",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 208
+      },
+      {
+        "id": "d05",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 225
+      },
+      {
+        "id": "d06",
+        "hits": 1,
+        "recall_at_k": false,
+        "recall_at_1": false,
+        "reciprocal_rank": 0.0,
+        "ms": 73
+      },
+      {
+        "id": "d07",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 205
+      },
+      {
+        "id": "d08",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 191
+      },
+      {
+        "id": "d09",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 187
+      },
+      {
+        "id": "d10",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 201
+      },
+      {
+        "id": "d11",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 195
+      },
+      {
+        "id": "d12",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 177
+      },
+      {
+        "id": "d13",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 209
+      },
+      {
+        "id": "d14",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 213
+      },
+      {
+        "id": "d15",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 215
+      },
+      {
+        "id": "d16",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 230
+      },
+      {
+        "id": "d17",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 292
+      },
+      {
+        "id": "d18",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 291
+      },
+      {
+        "id": "d19",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 207
+      },
+      {
+        "id": "d20",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 262
+      },
+      {
+        "id": "d21",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 242
+      },
+      {
+        "id": "d22",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 308
+      },
+      {
+        "id": "d23",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 312
+      },
+      {
+        "id": "d24",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 317
+      },
+      {
+        "id": "d25",
+        "hits": 1,
+        "recall_at_k": false,
+        "recall_at_1": false,
+        "reciprocal_rank": 0.0,
+        "ms": 213
+      },
+      {
+        "id": "d26",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 219
+      },
+      {
+        "id": "d27",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 200
+      },
+      {
+        "id": "d28",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 220
+      },
+      {
+        "id": "d29",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 174
+      },
+      {
+        "id": "d30",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 202
+      },
+      {
+        "id": "d31",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 192
+      },
+      {
+        "id": "d32",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 201
+      },
+      {
+        "id": "d33",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 209
+      },
+      {
+        "id": "d34",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 221
+      },
+      {
+        "id": "d35",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 204
+      },
+      {
+        "id": "d36",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 222
+      },
+      {
+        "id": "d37",
+        "hits": 1,
+        "recall_at_k": false,
+        "recall_at_1": false,
+        "reciprocal_rank": 0.0,
+        "ms": 196
+      },
+      {
+        "id": "d38",
+        "hits": 1,
+        "recall_at_k": false,
+        "recall_at_1": false,
+        "reciprocal_rank": 0.0,
+        "ms": 209
+      },
+      {
+        "id": "d39",
+        "hits": 1,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 198
+      },
+      {
+        "id": "d45",
+        "hits": 1,
+        "recall_at_k": false,
+        "recall_at_1": false,
+        "reciprocal_rank": 0.0,
+        "ms": 67
+      }
+    ]
+  },
+  "generation": {
+    "fact_accuracy": 0.825,
+    "fact_cited_support": 0.875,
+    "fact_false_abstention": 0.125,
+    "table_accuracy": 0.0,
+    "abstention_accuracy": 1.0,
+    "meta_correct": 1.0,
+    "mean_groundedness_on_facts": 0.875,
+    "p50_ms": 1256,
+    "rows": [
+      {
+        "id": "d01",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1041,
+        "answer": "The truck fleet consists of 214 trucks [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d02",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1255,
+        "answer": "Northwind Logistics earned 48.2 million EUR in 2025, which was a 9 % increase over the prior year[1].",
+        "correct": false,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d03",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1173,
+        "answer": "Rotterdam is the biggest site in the network. [1]",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d04",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1166,
+        "answer": "The French (Lyon) warehouse opened in April 2025[1]",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d05",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1226,
+        "answer": "The Gdańsk site is shutting down because its lease expires and the landlord has refused to renew it on acceptable terms[1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d06",
+        "kind": "fact",
+        "mode": "general",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 1519,
+        "answer": "The documents do not provide information on how long it takes for unloaded goods to become available for picking.",
+        "correct": false,
+        "cited_support": false,
+        "abstained": true
+      },
+      {
+        "id": "d07",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1147,
+        "answer": "38 battery‑powered vans were added [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d08",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1421,
+        "answer": "Tomasz Wiśniewski manages the fleet — he is in charge of the vehicles[1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d09",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1217,
+        "answer": "The renewable diesel (HVO biofuel) trial is being conducted on twelve heavy trucks based in Antwerp [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d10",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1422,
+        "answer": "Lost‑time incidents dropped to 7 in 2025, down from 12 in 2024—a reduction of five incidents compared with the prior year[1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d11",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1208,
+        "answer": "Forklift operators must be retrained every 18 months.[1]",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d12",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1132,
+        "answer": "The hazard reporting tool is called SafeLoop [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d13",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 16606,
+        "answer": "They are switching to Blue Yonder as the new warehouse management system vendor [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d14",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1573,
+        "answer": "The project was held up because mapping the data from the old system took far longer than expected—product master data, location codes and customer‑specific handling rules had drifted apart over a decade and had to be reconciled manually before loading [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d15",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1183,
+        "answer": "The migration is estimated to cost 2.3 million EUR [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d16",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1038,
+        "answer": "Amara Okafor is the chief technology officer[1]",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d17",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 16855,
+        "answer": "Helvetia Pharma is the client that contributes the most revenue, accounting for 14% of revenue in 2025 [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d18",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1387,
+        "answer": "4.1% of revenue was lost to departing customers [1]",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d19",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 905,
+        "answer": "The Net Promoter Score was 41 [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d20",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1199,
+        "answer": "Yes. In February 2025 the company experienced a phishing attack that compromised an employee’s email account; it was detected within hours, the account was locked, and no customer or personal data was lost[1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d21",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1188,
+        "answer": "Insurance costs increased by 17% [1]",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d22",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1448,
+        "answer": "9 % of driver positions were vacant at year‑end 2025[1]",
+        "correct": false,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d23",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1019,
+        "answer": "The new hub will be in Milan and is scheduled to open in the third quarter of 2026[1]",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d24",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 16769,
+        "answer": "30% of last‑mile deliveries should be electric by the end of 2026[1]",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d25",
+        "kind": "fact",
+        "mode": "general",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 1261,
+        "answer": "The documents do not provide the 2026 capex budget, so I can’t compare it to the migration cost.",
+        "correct": false,
+        "cited_support": false,
+        "abstained": true
+      },
+      {
+        "id": "d26",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1805,
+        "answer": "You receive a daily meal allowance of 45 EUR per day for food when travelling overnight [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d27",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 2099,
+        "answer": "The maximum reimbursable hotel cost in Paris is 220 EUR per night[1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d28",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1276,
+        "answer": "You may book business class only for flights that are longer than six hours, and you must have written approval from a vice‑president before making the reservation[1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d29",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1089,
+        "answer": "Receipts must be submitted with the expense claim within 30 days of the expense being incurred[1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d30",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1176,
+        "answer": "You are reimbursed at 0.30 EUR per kilometre for using your own car on business journeys [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d31",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1256,
+        "answer": "Yes—alcohol can be reimbursed only at a client dinner, and you may claim up to two alcoholic drinks per person (including wine) provided you record the clients’ names on the claim [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d32",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 16711,
+        "answer": "Full‑time employees receive 25 days of annual leave per calendar year[1]",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d33",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1379,
+        "answer": "Yes—up to 5 unused days may be carried over to the next year, but they must be taken by 31 March or they are lost [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d34",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1271,
+        "answer": "You can work from home up to two days per week [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d35",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1429,
+        "answer": "The core working hours are 10:00 to 15:00 [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d36",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1007,
+        "answer": "The probation period is six months [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d37",
+        "kind": "fact",
+        "mode": "general",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 16789,
+        "answer": "The documents do not contain any information about a fitness subsidy.",
+        "correct": false,
+        "cited_support": false,
+        "abstained": true
+      },
+      {
+        "id": "d38",
+        "kind": "fact",
+        "mode": "general",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 1335,
+        "answer": "The uploaded documents do not contain information about employer pension contributions.",
+        "correct": false,
+        "cited_support": false,
+        "abstained": true
+      },
+      {
+        "id": "d39",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1228,
+        "answer": "Laptops are replaced every three years, or sooner if they fail [1].",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d40",
+        "kind": "table",
+        "mode": "general",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 1161,
+        "answer": "The documents do not provide the total shipping cost across all shipments.",
+        "correct": false,
+        "expected": 174254.56
+      },
+      {
+        "id": "d41",
+        "kind": "table",
+        "mode": "general",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 1084,
+        "answer": "The documents don’t provide enough data to calculate an average weight for shipments leaving Rotterdam. Only a single shipment weight (22,547 kg) is shown, and no other Rotterdam shipments are listed.",
+        "correct": false,
+        "expected": 12728.0
+      },
+      {
+        "id": "d42",
+        "kind": "table",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1265,
+        "answer": "One shipment in the data is listed with destination Milan [1].",
+        "correct": false,
+        "expected": 19
+      },
+      {
+        "id": "d43",
+        "kind": "table",
+        "mode": "general",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 1219,
+        "answer": "The documents do not provide enough data to determine the overall percentage of shipments that arrived on time.",
+        "correct": false,
+        "expected": 85.0
+      },
+      {
+        "id": "d44",
+        "kind": "table",
+        "mode": "general",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 1519,
+        "answer": "The provided passages only show a single shipment cost (2487.76 EUR for SH‑0008) and do not include the full set of shipment data, so the documents do not contain enough information to determine which shipment had the highest cost.",
+        "correct": false,
+        "expected": "SH-0101"
+      },
+      {
+        "id": "d45",
+        "kind": "fact",
+        "mode": "general",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 1009,
+        "answer": "The documents do not contain information about shipment SH‑0042.",
+        "correct": false,
+        "cited_support": false,
+        "abstained": true
+      },
+      {
+        "id": "d46",
+        "kind": "unanswerable",
+        "mode": "general",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 17228,
+        "answer": "The documents do not provide any information about the CEO’s salary.",
+        "correct": true
+      },
+      {
+        "id": "d47",
+        "kind": "unanswerable",
+        "mode": "general",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 1349,
+        "answer": "The documents do not provide the number of employees at the Lyon warehouse.",
+        "correct": true
+      },
+      {
+        "id": "d48",
+        "kind": "unanswerable",
+        "mode": "general",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 1533,
+        "answer": "The documents do not mention the company's stock ticker symbol.",
+        "correct": true
+      },
+      {
+        "id": "d49",
+        "kind": "unanswerable",
+        "mode": "general",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 1162,
+        "answer": "The uploaded documents do not contain any information about a policy on bringing pets to the office.",
+        "correct": true
+      },
+      {
+        "id": "d50",
+        "kind": "unanswerable",
+        "mode": "general",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 16657,
+        "answer": "The uploaded documents do not provide any information about revenue in 2022.",
+        "correct": true
+      },
+      {
+        "id": "d51",
+        "kind": "meta",
+        "mode": "general",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 1110,
+        "answer": "You have uploaded the following files:\n- operations_report_2025.md  \n- travel_expense_policy.txt  \n- employee_handbook.docx  \n- shipments_2025.csv",
+        "correct": true
+      }
+    ]
+  }
+}

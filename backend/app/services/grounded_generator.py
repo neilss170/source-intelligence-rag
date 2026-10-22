@@ -78,6 +78,7 @@ class GroundedGenerator:
         question: str,
         hits: list[ScoredEvidence],
         query_type: QueryType,
+        history=(),
     ) -> GeneratedAnswer:
         question_terms = tokenize(question)
         answer_intent = detect_answer_intent(question)

@@ -77,6 +77,13 @@ class GeneratedAnswer(BaseModel):
     answer: str = Field(min_length=1)
     evidence_ids: list[str] = Field(default_factory=list)
     insufficient_evidence: bool = False
+    #: Written by a language model rather than the rule-based generator.
+    from_model: bool = False
+    #: The model judged a document question unanswerable from the passages.
+    abstained: bool = False
+    #: Passages created while answering - SQL query results - that the
+    #: answer may cite alongside the retrieved ones.
+    extra_evidence: list[EvidenceUnit] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_evidence_state(self) -> "GeneratedAnswer":
@@ -113,6 +120,8 @@ class QueryResponse(BaseModel):
     web_sources: list[WebSource] = Field(default_factory=list)
     grounded: bool
     groundedness_score: float = Field(ge=0, le=1)
+    #: Cited sentences that no cited passage was found to support.
+    unsupported_claims: list[str] = Field(default_factory=list)
     query_type: QueryType
     retrieval_ms: int = Field(ge=0)
     generation_ms: int = Field(ge=0)
