@@ -18,14 +18,11 @@ PUBLIC_ROUTES = {
     ("POST", "/api/auth/login"),
 }
 
-#: Routes still serving the single shared workspace of the prototype. They
-#: move under authentication with the document pipeline (milestone 2) and the
-#: streaming chat endpoint (milestone 4); until then they are listed here so
-#: the gap stays visible. This set must be empty when milestone 4 is done.
+#: Routes still serving the single shared workspace of the prototype. The
+#: query route moves under authentication with the streaming chat endpoint
+#: (milestone 4); until then it is listed here so the gap stays visible.
+#: This set must be empty when milestone 4 is done.
 LEGACY_UNSCOPED_ROUTES = {
-    ("GET", "/api/documents"),
-    ("POST", "/api/documents"),
-    ("DELETE", "/api/documents/{document_id}"),
     ("POST", "/api/query"),
 }
 
@@ -33,6 +30,11 @@ CHAT_ROUTES = [
     ("GET", "/api/chats/{chat_id}/messages", None),
     ("PATCH", "/api/chats/{chat_id}", {"title": "stolen"}),
     ("DELETE", "/api/chats/{chat_id}", None),
+]
+
+DOCUMENT_ROUTES = [
+    ("GET", "/api/documents/{document_id}"),
+    ("DELETE", "/api/documents/{document_id}"),
 ]
 
 
@@ -47,12 +49,18 @@ def _api_routes() -> set[tuple[str, str]]:
 
 def test_every_route_is_covered() -> None:
     authenticated = _api_routes() - PUBLIC_ROUTES - LEGACY_UNSCOPED_ROUTES
-    known = {
-        ("GET", "/api/me"),
-        ("POST", "/api/auth/logout"),
-        ("GET", "/api/chats"),
-        ("POST", "/api/chats"),
-    } | {(m, p) for m, p, _ in CHAT_ROUTES}
+    known = (
+        {
+            ("GET", "/api/me"),
+            ("POST", "/api/auth/logout"),
+            ("GET", "/api/chats"),
+            ("POST", "/api/chats"),
+            ("GET", "/api/documents"),
+            ("POST", "/api/documents"),
+        }
+        | {(m, p) for m, p, _ in CHAT_ROUTES}
+        | set(DOCUMENT_ROUTES)
+    )
 
     assert authenticated == known, (
         "A route was added or removed. Add it to this file's isolation tests, "
@@ -66,7 +74,10 @@ def test_every_route_is_covered() -> None:
 )
 def test_signed_out_callers_are_refused(make_client, method, path) -> None:
     client = make_client()
-    response = client.request(method, path.replace("{chat_id}", str(uuid.uuid4())))
+    some_id = str(uuid.uuid4())
+    response = client.request(
+        method, path.replace("{chat_id}", some_id).replace("{document_id}", some_id)
+    )
 
     assert response.status_code == 401
     assert response.json()["error"]["code"] == "not_authenticated"
@@ -118,3 +129,41 @@ def test_chat_lifecycle(make_client, sign_up) -> None:
     assert client.get(f"/api/chats/{first['id']}/messages").json() == []
     assert client.delete(f"/api/chats/{first['id']}").status_code == 204
     assert [c["id"] for c in client.get("/api/chats").json()] == [second["id"]]
+
+
+@pytest.mark.parametrize(("method", "path"), DOCUMENT_ROUTES)
+def test_another_users_document_looks_like_it_does_not_exist(
+    make_client, sign_up, ingestion, method, path
+) -> None:
+    alice, bob = make_client(), make_client()
+    sign_up(alice, "alice@example.com")
+    sign_up(bob, "bob@example.com")
+    uploaded = alice.post(
+        "/api/documents",
+        files=[("files", ("plans.txt", b"Alice's secret plans.", "text/plain"))],
+    )
+    document_id = uploaded.json()[0]["id"]
+
+    stolen = bob.request(method, path.format(document_id=document_id))
+    absent = bob.request(method, path.format(document_id=uuid.uuid4()))
+
+    assert stolen.status_code == absent.status_code == 404
+    assert stolen.json()["error"]["message"] == absent.json()["error"]["message"]
+    assert bob.get("/api/documents").json() == []
+    assert alice.get(f"/api/documents/{document_id}").json()["status"] == "ready"
+
+
+def test_identical_files_in_two_workspaces_are_separate_documents(
+    make_client, sign_up, ingestion
+) -> None:
+    alice, bob = make_client(), make_client()
+    sign_up(alice, "alice@example.com")
+    sign_up(bob, "bob@example.com")
+    same = [("files", ("notes.txt", b"Shared wording.", "text/plain"))]
+
+    alices = alice.post("/api/documents", files=same).json()[0]
+    bobs = bob.post("/api/documents", files=same).json()[0]
+
+    assert bobs["duplicate"] is False and bobs["id"] != alices["id"]
+    bob.delete(f"/api/documents/{bobs['id']}")
+    assert alice.get(f"/api/documents/{alices['id']}").status_code == 200

@@ -1,0 +1,7 @@
+# Containers run Linux: keep deployment files on LF whatever the checkout OS.
+*.sh text eol=lf
+*.sql text eol=lf
+*.conf text eol=lf
+Dockerfile text eol=lf
+*.Dockerfile text eol=lf
+docker-compose.yml text eol=lf

@@ -95,3 +95,58 @@ def _sign_up(client, email: str, password: str = "correct horse battery", name="
     assert response.status_code == 201, response.text
     client.headers["X-CSRF-Token"] = response.json()["csrf_token"]
     return response.json()
+
+
+# -- ingestion -----------------------------------------------------------------
+
+
+class FakeEncoder:
+    """Deterministic unit vectors, so tests need no model download."""
+
+    def encode(self, texts, normalize_embeddings=True, **kwargs):
+        import hashlib
+
+        import numpy as np
+
+        rows = []
+        for value in texts:
+            seed = int(hashlib.sha1(value.encode()).hexdigest()[:8], 16)
+            vector = np.random.default_rng(seed).normal(size=384)
+            rows.append(vector / np.linalg.norm(vector))
+        return np.asarray(rows, dtype=np.float32)
+
+
+class InlineQueue:
+    """Runs each queued document immediately, like a worker would."""
+
+    def __init__(self, storage) -> None:
+        self.storage = storage
+        self.queued: list = []
+        self.fail = False
+
+    async def enqueue(self, document_id) -> None:
+        from app.db.session import get_sessionmaker
+        from app.ingest.pipeline import index_document
+
+        if self.fail:
+            raise ConnectionError("redis down")
+        self.queued.append(document_id)
+        with get_sessionmaker()() as db:
+            index_document(db, document_id, self.storage)
+
+
+@pytest.fixture
+def ingestion(tmp_path, monkeypatch, db):
+    """Uploads stored in a temp dir and indexed inline with a fake encoder."""
+    from app.ingest import pipeline
+    from app.ingest.queue import get_queue
+    from app.ingest.storage import LocalFileStorage, get_storage
+    from app.main import app
+
+    storage = LocalFileStorage(tmp_path / "files")
+    queue = InlineQueue(storage)
+    monkeypatch.setattr(pipeline, "load_encoder", lambda name: FakeEncoder())
+    app.dependency_overrides[get_storage] = lambda: storage
+    app.dependency_overrides[get_queue] = lambda: queue
+    yield queue
+    app.dependency_overrides.clear()

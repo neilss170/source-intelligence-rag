@@ -8,11 +8,11 @@ another workspace is reported exactly like one that does not exist.
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.errors import not_found
-from app.db.models import Chat, Message
+from app.db.models import Chat, Document, Message
 
 
 def list_chats(db: Session, workspace_id: uuid.UUID) -> list[Chat]:
@@ -68,3 +68,61 @@ def list_messages(
             .order_by(Message.created_at, Message.id)
         )
     )
+
+
+def list_documents(db: Session, workspace_id: uuid.UUID) -> list[Document]:
+    return list(
+        db.scalars(
+            select(Document)
+            .where(Document.workspace_id == workspace_id)
+            .order_by(Document.created_at.desc(), Document.id)
+        )
+    )
+
+
+def get_document(
+    db: Session, workspace_id: uuid.UUID, document_id: uuid.UUID
+) -> Document:
+    document = db.scalar(
+        select(Document).where(
+            Document.id == document_id, Document.workspace_id == workspace_id
+        )
+    )
+    if document is None:
+        raise not_found("That document")
+    return document
+
+
+def find_document_by_checksum(
+    db: Session, workspace_id: uuid.UUID, checksum: str
+) -> Document | None:
+    return db.scalar(
+        select(Document).where(
+            Document.workspace_id == workspace_id, Document.checksum == checksum
+        )
+    )
+
+
+def workspace_bytes(db: Session, workspace_id: uuid.UUID) -> int:
+    return int(
+        db.scalar(
+            select(func.coalesce(func.sum(Document.size_bytes), 0)).where(
+                Document.workspace_id == workspace_id
+            )
+        )
+    )
+
+
+def delete_document(
+    db: Session, workspace_id: uuid.UUID, document_id: uuid.UUID
+) -> str:
+    """Delete a document and, by cascade, its passages and tables.
+
+    Returns the storage key of the original file, for the caller to remove
+    once the deletion has committed.
+    """
+    document = get_document(db, workspace_id, document_id)
+    key = document.storage_key
+    db.delete(document)
+    db.flush()
+    return key

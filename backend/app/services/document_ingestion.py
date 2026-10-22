@@ -282,3 +282,10 @@ def _safe_filename(filename: str) -> str:
     name = Path(filename or "document").name
     cleaned = SAFE_FILENAME.sub("_", name).strip("._")
     return cleaned or "document"
+
+
+# Public names for the background ingestion pipeline (app.ingest), which
+# reuses the measured extraction and titling rules above unchanged.
+extract_pages = _extract_pages
+passage_title = _title
+safe_filename = _safe_filename

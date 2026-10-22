@@ -12,6 +12,7 @@ from app.core.errors import (
     RequestIdMiddleware,
     install_error_handlers,
 )
+from app.core.limits import BodySizeLimit
 from app.core.storage import ensure_storage_directories
 
 
@@ -38,6 +39,13 @@ def create_app() -> FastAPI:
         expose_headers=[REQUEST_ID_HEADER],
     )
     app.add_middleware(RequestIdMiddleware)
+    app.add_middleware(
+        BodySizeLimit,
+        path_prefix="/api/documents",
+        # Every file at its limit, plus room for the multipart framing.
+        max_bytes=settings.max_upload_files * settings.max_file_size_mb * 1024 * 1024
+        + 1024 * 1024,
+    )
     install_error_handlers(app)
     app.include_router(api_router, prefix="/api")
     return app

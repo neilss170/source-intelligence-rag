@@ -22,6 +22,23 @@ def load_encoder(model_name: str):
     return SentenceTransformer(model_name)
 
 
+def embedding_input(
+    title: str,
+    text: str,
+    *,
+    section: str = "document",
+    organization: str = "",
+    technologies=(),
+) -> str:
+    """The exact text embedded for a passage.
+
+    Ingestion stores embeddings and search compares queries against them, so
+    both must build this string the same way; it is the format the retrieval
+    evaluation was measured with.
+    """
+    return " | ".join([section, title, organization, ", ".join(technologies), text])
+
+
 class DenseRetriever:
     def __init__(
         self,
@@ -37,14 +54,12 @@ class DenseRetriever:
         self._minimum_score = minimum_score
         self._model = load_encoder(model_name)
         documents = [
-            " | ".join(
-                [
-                    item.section.value,
-                    item.title,
-                    item.organization or "",
-                    ", ".join(item.technologies),
-                    item.text,
-                ]
+            embedding_input(
+                item.title,
+                item.text,
+                section=item.section.value,
+                organization=item.organization or "",
+                technologies=item.technologies,
             )
             for item in evidence
         ]
