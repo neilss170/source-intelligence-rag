@@ -14,6 +14,7 @@ from app.auth.service import (
     start_session,
     workspace_for,
 )
+from app.core.rate_limit import limit_auth
 from app.db.models import AuthSession, User
 from app.db.session import get_db
 from app.models.account import (
@@ -44,6 +45,7 @@ def signup(
     response: Response,
     db: Session = Depends(get_db),
 ) -> SessionOut:
+    limit_auth(request, body.email)
     user = sign_up(db, email=body.email, password=body.password, name=body.name)
     token, session = start_session(db, user, request.headers.get("user-agent"))
     result = _session_out(db, user, session)
@@ -59,6 +61,7 @@ def login(
     response: Response,
     db: Session = Depends(get_db),
 ) -> SessionOut:
+    limit_auth(request, body.email)
     user = authenticate(db, email=body.email, password=body.password)
     token, session = start_session(db, user, request.headers.get("user-agent"))
     result = _session_out(db, user, session)

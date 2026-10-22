@@ -209,3 +209,25 @@ def test_model_chain_from_settings(monkeypatch) -> None:
     assert (claude.kind, claude.api_key) == ("anthropic", "secret")
     assert (local.kind, local.api_key) == ("openai", None)
     assert model_chain(Settings(chat_api_key=None, chat_models="")) == []
+
+
+def test_model_options_are_sent_with_each_request() -> None:
+    sent = []
+
+    def server(request: httpx.Request) -> httpx.Response:
+        sent.append(json.loads(request.content))
+        return httpx.Response(200, content=openai_stream("ok"))
+
+    spec = ModelSpec(
+        "big", "https://groq.test/v1", "key", options={"reasoning_effort": "low"}
+    )
+    run(
+        ModelRouter(
+            [spec], ExhaustionStore(None), transport=httpx.MockTransport(server)
+        ).complete("s", "u")
+    )
+
+    assert sent[0]["reasoning_effort"] == "low"
+    assert model_chain(
+        Settings(chat_api_key="k", chat_models="", chat_reasoning_effort="low")
+    )[0].options == {"reasoning_effort": "low"}

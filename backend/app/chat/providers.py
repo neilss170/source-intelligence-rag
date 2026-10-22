@@ -29,6 +29,7 @@ from typing import Literal
 import httpx
 
 from app.core.config import Settings
+from app.core.observability import MODEL_EXHAUSTED, PROVIDER_ERRORS
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,9 @@ class ModelSpec:
     base_url: str
     api_key: str | None
     kind: Literal["openai", "anthropic"] = "openai"
+    #: Extra request fields, e.g. {"reasoning_effort": "low"} for gpt-oss,
+    #: which measured 1.2 s -> 0.73 s to the first token on Groq.
+    options: dict = field(default_factory=dict, hash=False, compare=False)
 
 
 @dataclass
@@ -106,13 +110,24 @@ def model_chain(settings: Settings) -> list[ModelSpec]:
                     base_url=entry["base_url"].rstrip("/"),
                     api_key=os.environ.get(key_env) if key_env else None,
                     kind=entry.get("kind", "openai"),
+                    options=entry.get("options") or {},
                 )
             )
         return specs
     if not settings.chat_api_key:
         return []
+    options = (
+        {"reasoning_effort": settings.chat_reasoning_effort}
+        if settings.chat_reasoning_effort
+        else {}
+    )
     return [
-        ModelSpec(name, settings.chat_api_base_url.rstrip("/"), settings.chat_api_key)
+        ModelSpec(
+            name,
+            settings.chat_api_base_url.rstrip("/"),
+            settings.chat_api_key,
+            options=options,
+        )
         for name in dict.fromkeys((settings.chat_model, *settings.fallback_models))
     ]
 
@@ -204,6 +219,7 @@ class ModelRouter:
                         yield delta
                     return
                 except ProviderError as exc:
+                    PROVIDER_ERRORS.labels(spec.name, str(exc.status)).inc()
                     if started:
                         raise
                     if exc.status == 429:
@@ -217,6 +233,7 @@ class ModelRouter:
                             continue
                         wait = wait or DEFAULT_EXHAUSTED_S
                         await self._store.mark(spec.name, wait)
+                        MODEL_EXHAUSTED.labels(spec.name).inc()
                         soonest = min(soonest, wait)
                         logger.warning("%s out of quota for %.0fs", spec.name, wait)
                         break
@@ -271,6 +288,7 @@ async def _openai(client, spec, system, user, max_tokens) -> AsyncIterator[Delta
     }
     if "api.openai.com" in spec.base_url:
         payload["stream_options"] = {"include_usage": True}
+    payload.update(spec.options)
     async with client.stream(
         "POST", f"{spec.base_url}/chat/completions", headers=headers, json=payload
     ) as response:
@@ -308,6 +326,7 @@ async def _anthropic(client, spec, system, user, max_tokens) -> AsyncIterator[De
         "system": system,
         "messages": [{"role": "user", "content": user}],
         "stream": True,
+        **spec.options,
     }
     base = spec.base_url or "https://api.anthropic.com"
     async with client.stream(

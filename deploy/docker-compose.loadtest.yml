@@ -1,0 +1,16 @@
+# Load-test overlay: the api answers with the stand-in model on the host
+# (backend/scripts/load/fake_llm.py) and allows many sign-ups from one address.
+#
+#   python backend/scripts/load/fake_llm.py &
+#   docker compose -f docker-compose.yml -f deploy/docker-compose.loadtest.yml up -d api
+#   python backend/scripts/load/load_test.py --users 20 --questions 5
+#   docker compose up -d api        # back to the real configuration
+
+services:
+  api:
+    environment:
+      CHAT_MODELS: '[{"name": "fake-llm", "base_url": "http://host.docker.internal:9100/v1"}]'
+      RATE_LIMIT_AUTH_PER_15_MINUTES: "1000"
+      DAILY_TOKEN_BUDGET_PER_USER: "0"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

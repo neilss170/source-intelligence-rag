@@ -25,6 +25,7 @@ dependencies = [
   "redis>=5.2,<7.0",
   "email-validator>=2.2,<3.0",
   "arq>=0.26,<1.0",
+  "prometheus-client>=0.21,<1.0",
 ]
 
 [project.optional-dependencies]

@@ -28,6 +28,17 @@ class Settings(BaseSettings):
     cookie_secure: bool | None = None
     session_days: int = Field(default=30, ge=1, le=365)
     min_password_length: int = Field(default=10, ge=8, le=128)
+    log_level: str = "INFO"
+    # json in production (one object per line), text for reading locally;
+    # empty picks json everywhere but development.
+    log_format: str = ""
+    rate_limit_questions_per_minute: int = Field(default=30, ge=1)
+    rate_limit_uploads_per_hour: int = Field(default=20, ge=1)
+    rate_limit_auth_per_15_minutes: int = Field(default=10, ge=1)
+    # CPU threads per model call. Many concurrent requests each using every
+    # core contend badly; a few threads per call, many calls at once, is
+    # faster under load. 0 leaves PyTorch's default (all cores).
+    torch_threads: int = Field(default=2, ge=0)
     # Load the models in the background at startup (see app/core/warmup.py).
     warm_models: bool = True
     max_file_size_mb: int = Field(default=10, ge=1, le=100)
@@ -45,6 +56,8 @@ class Settings(BaseSettings):
     # JSON list of {name, base_url, api_key_env, kind}; overrides the three
     # settings above and lets each model have its own endpoint and key.
     chat_models: str = ""
+    # For reasoning models (gpt-oss): low, medium or high. Empty sends nothing.
+    chat_reasoning_effort: str = ""
     # Tokens a user may spend per day across all models; 0 means unlimited.
     daily_token_budget_per_user: int = Field(default=200_000, ge=0)
     # Passage characters sent whole before search takes over (~4k tokens).

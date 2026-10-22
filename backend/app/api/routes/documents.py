@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.auth.deps import Caller, current_caller
 from app.core.config import get_settings
 from app.core.errors import AppError
+from app.core.rate_limit import limit_uploads
 from app.db import repository
 from app.db.models import Document
 from app.db.session import get_db
@@ -70,7 +71,7 @@ def get_document(
 )
 async def upload_documents(
     files: list[UploadFile] = File(...),
-    caller: Caller = Depends(current_caller),
+    caller: Caller = Depends(limit_uploads),
     db: Session = Depends(get_db),
     storage: LocalFileStorage = Depends(get_storage),
     queue: IngestionQueue = Depends(get_queue),

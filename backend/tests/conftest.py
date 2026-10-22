@@ -21,6 +21,11 @@ os.environ.setdefault("REDIS_URL", "redis://127.0.0.1:6380/15")
 os.environ.setdefault("APP_ENV", "development")
 # Tests never load the real models in the background (app/core/warmup.py).
 os.environ["WARM_MODELS"] = "false"
+# ...and never call a real provider: a test that forgets to script the model
+# gets "no model configured", not a network call billed to a real key.
+os.environ["CHAT_API_KEY"] = ""
+os.environ["CHAT_MODELS"] = ""
+os.environ["TAVILY_API_KEY"] = ""
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 
@@ -158,3 +163,21 @@ def ingestion(tmp_path, monkeypatch, db):
 def fake_encoder():
     """The deterministic encoder ingestion uses in tests, for query encoding too."""
     return FakeEncoder()
+
+
+@pytest.fixture(autouse=True)
+def _fresh_rate_limits():
+    """Every test starts with empty rate-limit counters.
+
+    Deletes only the limiter's own keys - never a whole Redis database.
+    """
+    from app.core.redis_client import get_redis
+
+    try:
+        client = get_redis()
+        keys = list(client.scan_iter("rl:*"))
+        if keys:
+            client.delete(*keys)
+    except Exception:  # noqa: BLE001 - tests without Redis skip this
+        pass
+    yield

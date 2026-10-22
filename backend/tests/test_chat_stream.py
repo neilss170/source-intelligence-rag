@@ -368,3 +368,21 @@ def test_a_question_while_files_are_indexing_says_so(chat, ingestion) -> None:
     )
     assert events[-1][1]["mode"] == "indexing"
     assert model.prompts == []
+
+
+def test_no_database_connection_is_held_while_the_answer_streams(chat) -> None:
+    from app.db.session import get_engine
+
+    _, _, script, ask, upload = chat
+    upload("report.md", REPORT)
+    held = []
+
+    def answer(user):
+        held.append(get_engine().pool.checkedout())
+        return "The company operates 214 trucks [E2]."
+
+    script(answer)
+    ask("How big is the fleet?")
+
+    # Under load, a connection held per stream exhausted the pool.
+    assert held == [0]
