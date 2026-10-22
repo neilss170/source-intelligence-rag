@@ -1,0 +1,79 @@
+# Source Intelligence - local and single-host deployment.
+#
+#   docker compose up -d db redis     # just the infrastructure, for development
+#   docker compose up --build         # the whole stack on http://localhost:8080
+#
+# Configuration comes from backend/.env (copy backend/.env.example).
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-si}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-si_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-source_intelligence}
+    ports:
+      # 5433 on the host: a Postgres already installed on 5432 is common.
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./deploy/postgres-init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-si} -d ${POSTGRES_DB:-source_intelligence}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:6380:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ./backend
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-si}:${POSTGRES_PASSWORD:-si_dev_password}@db:5432/${POSTGRES_DB:-source_intelligence}
+      REDIS_URL: redis://redis:6379/0
+      DATA_DIR: /data
+      HF_HOME: /models
+    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"]
+    volumes:
+      - app-data:/data
+      - model-cache:/models
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  web:
+    build:
+      context: .
+      dockerfile: deploy/web.Dockerfile
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  db-data:
+  redis-data:
+  app-data:
+  model-cache:
