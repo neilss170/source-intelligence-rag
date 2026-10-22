@@ -16,6 +16,7 @@ choice between documents, general chat and the web.
 """
 
 import asyncio
+import hashlib
 import json
 import logging
 import uuid
@@ -32,6 +33,7 @@ from app.chat.providers import AllModelsExhausted, ModelRouter, ProviderError, U
 from app.chat.stream_citations import StreamingCitations
 from app.chat.usage import record_usage, tokens_used_today
 from app.core.config import Settings
+from app.core.observability import ANSWER_STAGE, ANSWERS, GROUNDEDNESS, TOKENS
 from app.db import repository
 from app.db.models import Chat, Message
 from app.models.query import ChatMessage, ChatRole
@@ -98,6 +100,7 @@ class _Outcome:
     model: str = ""
     calls: list[tuple[str, Usage]] = field(default_factory=list)
     timings: dict[str, int] = field(default_factory=dict)
+    abstained: bool = False
 
 
 def sse(event: str, data: dict) -> str:
@@ -144,6 +147,7 @@ class ChatService:
 
         budget = self._settings.daily_token_budget_per_user
         if budget and used >= budget:
+            _report(turn, outcome, "budget")
             yield sse(
                 "error",
                 {
@@ -167,6 +171,7 @@ class ChatService:
             async for event in self._answer(turn, history, files, outcome):
                 yield event
         except AllModelsExhausted as exc:
+            _report(turn, outcome, "model_quota")
             yield sse(
                 "error",
                 {
@@ -179,12 +184,14 @@ class ChatService:
             return
         except Exception:
             logger.exception("Chat turn failed")
+            _report(turn, outcome, "internal_error")
             yield sse("error", {"code": "internal_error", "message": _SORRY})
             await asyncio.to_thread(self._record_calls, turn, outcome)
             return
 
         outcome.timings["total_ms"] = _ms(started)
         message_id = await asyncio.to_thread(self._finish, turn, outcome)
+        _report(turn, outcome, outcome.mode)
         yield sse(
             "done",
             {
@@ -281,6 +288,7 @@ class ChatService:
 
         if generated.abstained:
             outcome.mode = "workspace"
+            outcome.abstained = True
             return
         if not generated.evidence_ids:
             # The model answered without the documents: small talk, a
@@ -551,6 +559,41 @@ def _classify(head: str, *, final: bool = False) -> str:
     if could_be and len(text) < _DECIDE_AFTER and not final:
         return "deciding"
     return "stream"
+
+
+def _report(turn: Turn, outcome: _Outcome, ended: str) -> None:
+    """Metrics and one log line per answer - the line to grep for a slow,
+    expensive or ungrounded answer."""
+    ANSWERS.labels(ended).inc()
+    for stage, ms in outcome.timings.items():
+        ANSWER_STAGE.labels(stage.removesuffix("_ms")).observe(ms / 1000)
+    if outcome.groundedness is not None:
+        GROUNDEDNESS.observe(outcome.groundedness)
+    for model, usage in outcome.calls:
+        TOKENS.labels(model, "in").inc(usage.tokens_in)
+        TOKENS.labels(model, "out").inc(usage.tokens_out)
+    totals = _usage_totals(outcome.calls)
+    logger.info(
+        "answer %s",
+        ended,
+        extra={
+            "event": "answer",
+            "ended": ended,
+            # Hashed: logs identify a user's activity without naming them.
+            "user": hashlib.sha256(str(turn.user_id).encode()).hexdigest()[:12],
+            "chat_id": str(turn.chat_id),
+            "scope": turn.scope,
+            "model": outcome.model or None,
+            "models_called": sorted({model for model, _ in outcome.calls}),
+            "tokens_in": totals["tokens_in"],
+            "tokens_out": totals["tokens_out"],
+            "latency_ms": outcome.timings,
+            "citations": len(outcome.citations),
+            "groundedness": outcome.groundedness,
+            "unsupported": len(outcome.unsupported),
+            "abstained": outcome.abstained,
+        },
+    )
 
 
 def _usage_totals(calls: list[tuple[str, Usage]]) -> dict:

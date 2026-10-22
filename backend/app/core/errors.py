@@ -31,11 +31,19 @@ request_id_var: ContextVar[str] = ContextVar("request_id", default="-")
 class AppError(Exception):
     """An expected failure with a stable code the client can act on."""
 
-    def __init__(self, status: int, code: str, message: str) -> None:
+    def __init__(
+        self,
+        status: int,
+        code: str,
+        message: str,
+        headers: dict[str, str] | None = None,
+    ) -> None:
         super().__init__(message)
         self.status = status
         self.code = code
         self.message = message
+        #: Extra response headers, e.g. Retry-After on a 429.
+        self.headers = headers or {}
 
 
 def not_found(what: str = "That item") -> AppError:
@@ -78,7 +86,10 @@ def _error(request: Request, status: int, code: str, message: str, **extra):
 def install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def app_error(request: Request, exc: AppError):
-        return _error(request, exc.status, exc.code, exc.message)
+        response = _error(request, exc.status, exc.code, exc.message)
+        for name, value in exc.headers.items():
+            response.headers[name] = value
+        return response
 
     @app.exception_handler(StarletteHTTPException)
     async def http_error(request: Request, exc: StarletteHTTPException):

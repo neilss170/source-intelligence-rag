@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.auth.deps import Caller, current_caller
 from app.chat.deps import get_chat_service
 from app.chat.service import ChatService, Turn
+from app.core.rate_limit import limit_questions
 from app.db import repository
 from app.db.session import get_db
 from app.models.account import ChatCreate, ChatOut, ChatUpdate, MessageOut
@@ -83,7 +84,7 @@ class MessageCreate(BaseModel):
 def send_message(
     chat_id: uuid.UUID,
     body: MessageCreate,
-    caller: Caller = Depends(current_caller),
+    caller: Caller = Depends(limit_questions),
     db: Session = Depends(get_db),
     service: ChatService = Depends(get_chat_service),
 ) -> StreamingResponse:
@@ -100,6 +101,11 @@ def send_message(
         question=body.question.strip(),
         scope=body.scope,
     )
+    # The request's session would otherwise stay checked out until the stream
+    # ends; 20 concurrent answers then held every pooled connection and the
+    # rest timed out (found by the load test). The service opens its own
+    # short sessions when it needs the database.
+    db.close()
     return StreamingResponse(
         service.run(turn),
         media_type="text/event-stream",

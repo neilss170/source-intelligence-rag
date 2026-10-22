@@ -14,6 +14,7 @@ from arq.connections import RedisSettings
 from sqlalchemy import or_, select
 
 from app.core.config import get_settings
+from app.core.warmup import limit_cpu_threads
 from app.db.models import Document
 from app.db.session import get_sessionmaker
 from app.ingest.pipeline import index_document
@@ -70,6 +71,7 @@ async def requeue_stale(ctx) -> int:
 
 
 async def startup(ctx) -> None:
+    limit_cpu_threads()
     # Load the embedding model before the first job, not during it.
     await asyncio.to_thread(load_encoder, get_settings().dense_model)
     await requeue_stale(ctx)

@@ -56,6 +56,10 @@ docker compose up --build
 Open `http://localhost:8080`. Postgres (with pgvector), Redis, the API and the
 web app all run as containers; migrations apply when the API starts.
 
+To run it on a server with HTTPS, see [docs/DEPLOYING.md](docs/DEPLOYING.md);
+for backups, logs, metrics and load testing, see
+[docs/OPERATIONS.md](docs/OPERATIONS.md).
+
 ### Backend
 
 Start the database and Redis, then run the API on your machine:

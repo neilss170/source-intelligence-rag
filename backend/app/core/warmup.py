@@ -23,7 +23,17 @@ def status() -> str:
     return _state["status"]
 
 
+def limit_cpu_threads() -> None:
+    """Fewer PyTorch threads per call, so concurrent calls don't contend."""
+    threads = get_settings().torch_threads
+    if threads:
+        import torch
+
+        torch.set_num_threads(threads)
+
+
 def start() -> None:
+    limit_cpu_threads()
     with _lock:
         if _state["status"] != "not_started":
             return

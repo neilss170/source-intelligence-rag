@@ -232,3 +232,79 @@ index until milestone 4.
   - no CSP or script errors. The only console entry is the expected 401
     from checking for a session before signing in.
 - **Tests:** 1 new backend test (199 in total) plus the browser flow.
+
+## Milestone 6: Hardening (2026-10-22)
+
+- **Load tested, and the bug it found is fixed.** 20 concurrent users, each
+  signing up, uploading, waiting for indexing and asking 5 questions,
+  through nginx against a stand-in model with fixed timing
+  (`backend/scripts/load/`):
+  - **First run:** 29 of 100 answers failed and the median first token took
+    31 s. Every streaming request held its database connection for the
+    whole answer, so 20 streams exhausted the pool and the rest timed out
+    after 30 s.
+  - **Fix:** the request releases its session before streaming. A
+    regression test checks no connection is held while a reply streams; it
+    fails without the fix.
+  - **Second run:** 100 of 100 answered with 0 errors, the median first
+    token took 2.53 s and the whole run took 47 s instead of 233 s.
+  - **PyTorch threads:** at most 2 per model call (`TORCH_THREADS`), so
+    concurrent calls don't fight over cores. That brought the median first
+    token to 2.26 s and the median full answer to 6.44 s.
+- **Latency budget met for a single warm user:** first token median 0.95 s
+  (≤ 1.0 s target), full answer 2.18 s (≤ 2.5 s), with a model that takes
+  0.35 s to its first token. A real provider adds its own time; Groq's
+  gpt-oss-20b measured 0.73 s with the new `CHAT_REASONING_EFFORT=low` and
+  1.2 s without. That setting is opt-in until the full evaluation confirms
+  answer quality holds.
+- **Rate limits** in Redis, configurable, failing open if Redis is down:
+  - 30 questions a minute and 20 uploads an hour per user;
+  - 10 sign-in or sign-up attempts per 15 minutes, counted both per address
+    and per email (hashed), so guessing one account is limited from any
+    address.
+
+  Over the limit, the reply is a `429` with `Retry-After`.
+- **Logs:**
+  - JSON lines outside development, carrying the request ID returned in
+    `X-Request-ID`;
+  - one access line per API request, by route template;
+  - one line per answer: how it ended, the models called (showing
+    fallbacks), tokens, per-stage latency, citations, groundedness,
+    unsupported claims and abstention. Users appear as a hash.
+- **Metrics:** Prometheus at `/metrics` on the api port only (nginx doesn't
+  forward it; checked):
+  - requests and latency by route template;
+  - answers by outcome;
+  - per-stage latency;
+  - groundedness;
+  - tokens per model;
+  - provider errors and quota exhaustion;
+  - documents by status;
+  - ingestion queue depth.
+- **Backup and restore, practised:** a database dump restored into a scratch
+  database matched the live one in all 9 tables, and vector search worked on
+  the copy. The files archive restored to 71 of 71 files with identical
+  checksums. The steps are in `docs/OPERATIONS.md`.
+- **Guides:** `docs/DEPLOYING.md` covers configuration, HTTPS with Caddy
+  (including the flush setting that keeps answers streaming), first start,
+  upgrades and a security checklist. `docs/OPERATIONS.md` covers state,
+  backup, restore, health, logs, metrics, load testing, scaling and quotas.
+- **Fixed in tests:** a test could reach the real model provider through
+  the key in `backend/.env`. The test configuration now blanks provider
+  keys, so a test that forgets to fake the model fails fast instead of
+  spending quota.
+- **Tests:** 9 new, 208 in total. They cover rate limits (per address, per
+  account, per user, failing open), metrics by route template, JSON logs,
+  answer metrics, model request options and the held-connection
+  regression.
+
+### Still open before calling it released
+
+- **The full 51-question generation gate with the real model.** A 6-question
+  smoke test scored 6/6. The full run uses most of a free Groq key's daily
+  allowance, which Scribe shares, so it is waiting for a go-ahead or a paid
+  key.
+- **The claim check is the slowest stage under load** (3.5 s median across
+  20 concurrent users). It runs after the text streams, so it doesn't delay
+  what people read, but it's the first thing to optimise. Options: batch
+  NLI calls across requests, or run the check in the worker.
