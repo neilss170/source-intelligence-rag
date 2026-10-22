@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
+from app.core import warmup
 from app.core.config import get_settings
 from app.core.redis_client import get_redis
 from app.db.session import get_engine
@@ -41,6 +42,12 @@ def ready() -> JSONResponse:
     except Exception as exc:  # noqa: BLE001
         logger.warning("Readiness: redis unavailable: %s", exc)
         checks["redis"] = "unavailable"
+    # Reported once warm-up has started; a process that never warms (tests,
+    # scripts) is judged on its connections alone.
+    if warmup.status() != "not_started":
+        checks["models"] = {"ready": "ok", "loading": "loading"}.get(
+            warmup.status(), "failed"
+        )
     ready_now = all(value == "ok" for value in checks.values())
     return JSONResponse(
         {"status": "ready" if ready_now else "not_ready", "checks": checks},

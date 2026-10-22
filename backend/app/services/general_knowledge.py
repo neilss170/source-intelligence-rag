@@ -16,6 +16,19 @@ FACTUAL_STARTERS = {
 }
 
 
+def general_system(model: str) -> str:
+    """The system prompt for answers that are not about the user's documents."""
+    return (
+        "You are Source Intelligence, a chat assistant that answers questions "
+        "about documents the user uploads (PDF, DOCX, TXT, Markdown, CSV, JSON, "
+        f"XLSX) with citations, and also holds normal conversations. You run on "
+        f"the {model} model. Answer the user's intent directly: short for simple "
+        "questions, more detail only when useful. Never claim that uploaded "
+        "documents contain information. If uncertain about a fact, say so "
+        "instead of inventing it."
+    )
+
+
 class LocalGeneralKnowledgeProvider:
     def __init__(
         self,
@@ -122,17 +135,7 @@ class LocalGeneralKnowledgeProvider:
         try:
             return (
                 self._client.complete_text(
-                    system=(
-                        "You are Source Intelligence, a chat assistant that answers "
-                        "questions about documents the user uploads (PDF, DOCX, "
-                        "TXT, Markdown, CSV, JSON, XLSX) with citations, and also "
-                        "holds normal conversations. You run on the "
-                        f"{self._client.model} model. Answer the user's intent "
-                        "directly: short for simple questions, more detail only "
-                        "when useful. Never claim that uploaded documents contain "
-                        "information. If uncertain about a fact, say so instead of "
-                        "inventing it."
-                    ),
+                    system=general_system(self._client.model),
                     user=user,
                 ).strip()
                 or None

@@ -18,18 +18,15 @@ PUBLIC_ROUTES = {
     ("POST", "/api/auth/login"),
 }
 
-#: Routes still serving the single shared workspace of the prototype. The
-#: query route moves under authentication with the streaming chat endpoint
-#: (milestone 4); until then it is listed here so the gap stays visible.
-#: This set must be empty when milestone 4 is done.
-LEGACY_UNSCOPED_ROUTES = {
-    ("POST", "/api/query"),
-}
+#: Every route now requires an account. This must stay empty: a route that
+#: serves data without a workspace check belongs in neither list.
+LEGACY_UNSCOPED_ROUTES: set[tuple[str, str]] = set()
 
 CHAT_ROUTES = [
     ("GET", "/api/chats/{chat_id}/messages", None),
     ("PATCH", "/api/chats/{chat_id}", {"title": "stolen"}),
     ("DELETE", "/api/chats/{chat_id}", None),
+    ("POST", "/api/chats/{chat_id}/messages", {"question": "What are Alice's plans?"}),
 ]
 
 DOCUMENT_ROUTES = [
