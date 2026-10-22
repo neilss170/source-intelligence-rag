@@ -90,7 +90,10 @@ def _build_features(
     document_chunks = {
         document_id: [
             text
-            for _, text in chunk_pages((ExtractedPage(page=1, text=document_text),))
+            for text in (
+                chunk.text
+                for chunk in chunk_pages((ExtractedPage(page=1, text=document_text),))
+            )
         ]
         for document_id, document_text in documents.items()
     }

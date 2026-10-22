@@ -12,8 +12,8 @@ htmlcov/
 .vscode/
 backend/.venv/
 backend/.pytest_cache/
-backend/**/__pycache__/
-backend/**/*.py[cod]
+__pycache__/
+*.py[cod]
 backend/data/uploads/*
 !backend/data/uploads/.gitkeep
 backend/data/index/*

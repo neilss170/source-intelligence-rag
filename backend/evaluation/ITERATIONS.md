@@ -95,3 +95,62 @@ estimated from retrieval-only runs.
 - Explicit absent-entity guard for yes/no lookups
 - Adaptive retrieval depth: top-k 1 for direct lookup, top-k 4 for synthesis
 - Minimum cosine similarity: 0.35
+
+## Document evaluation set (mixed formats, model-written answers)
+
+The resume set above measures the rule-based pipeline. Model-written answers
+over arbitrary uploads are measured on a second set:
+`document_eval_set.json`, 51 questions over a Markdown report, a TXT policy, a
+DOCX handbook with a table and a 120-row CSV (`document_corpus.py` builds the
+corpus; table answers are computed from the same rows). Run it with
+`python scripts/evaluate_documents.py --name <run> [--generate] [--legacy]`.
+Generation used `openai/gpt-oss-120b` on Groq.
+
+| Run | Recall@k | Recall@1 | MRR | Passages | Fact accuracy | Cited support | Table accuracy | Abstention | Groundedness |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Before: legacy chain, character chunker | 0.875 | 0.875 | 0.875 | 1.00 | 0.875 | 0.875 | 0.00 | 1.00 | 1.0 (hard-coded) |
+| New chunker, legacy chain | 0.900 | 0.900 | 0.900 | 1.00 | - | - | - | - | - |
+| After: hybrid + rerank, new chunker, SQL, guardrails | 1.000 | 0.950 | 0.975 | 3.15 | 1.000 | 0.975 | 1.00 | 1.00 | 0.949 |
+
+Fact accuracy for "before" is after correcting the scorer for narrow no-break
+spaces ("9 %"), which counted two right answers as wrong.
+
+### What changed, and what each fixed
+
+- **Adaptive top-k returned one passage for almost every question.** Model
+  mode now keeps up to `RETRIEVAL_TOP_K` reranked passages (reranker
+  probability >= 0.02, best 3 always kept). Fixed the comparison question
+  (d25), which needs two passages.
+- **Character slicing cut 16 of 24 report passages mid-sentence and left
+  headings as passages of their own.** The chunker packs whole sentences with
+  one sentence of overlap, never splits table rows, and carries the heading
+  path into each passage title. DOCX is read in body order, so the benefits
+  table sits under its heading instead of after the whole document (d37, d38).
+- **Dense-only retrieval missed exact identifiers** ("SH-0042", d45). BM25 and
+  dense candidates are fused by reciprocal rank and reranked by the cross
+  encoder. Iteration 2 above rejected fusion for precision on the resume set;
+  the reranker now carries precision, and the resume-tuned chain is kept
+  unchanged for rule-based mode.
+- **Totals and averages over 120 rows were impossible from retrieved rows**
+  (0/5). CSV and XLSX uploads are loaded into a read-only in-memory SQLite
+  database; the model asks for one SELECT and cites the result (5/5).
+- **Groundedness was a constant.** Each cited sentence is now checked by
+  `cross-encoder/nli-deberta-v3-xsmall` against one-to-three-sentence runs of
+  the passages it cites, with and without the section path in front. Whole
+  passages as premises scored true claims as neutral; the larger
+  `nli-deberta-v3-base` was no more accurate and 2.3x slower. Claims that
+  need arithmetic ("a reduction of five", d10, d25) remain flagged: NLI
+  cannot check them. Table rows and SQL results are not NLI-checked.
+
+### Latency and provider limits
+
+Isolated questions take 1.6-1.8 s (about 0.5 s retrieval on CPU, the rest
+the model call and the claim check); SQL questions take about 2.5 s for their
+two model calls. Back-to-back evaluation medians are about 5 s because Groq's
+free tier allows 8,000 tokens per minute. It also allows 200,000 tokens per
+day, about 50-60 questions at this prompt size; when that is spent the
+assistant says so instead of falling back silently to rule-based answers.
+
+The final groundedness figure (0.949) re-scores the saved answers of the
+last full run offline with the final claim checker, because the daily token
+limit was reached before a further full run.

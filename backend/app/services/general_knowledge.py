@@ -24,7 +24,16 @@ class LocalGeneralKnowledgeProvider:
         api_base_url: str = "https://api.openai.com/v1",
         chat_model: str = "gpt-4.1-mini",
         local_model: str = "Qwen/Qwen2.5-1.5B-Instruct",
+        client=None,
     ) -> None:
+        """Create the provider.
+
+        Args:
+            client: A ``ChatCompletionClient`` to answer through. Preferred
+                over the direct request below because it switches to a
+                fallback model when the main one runs out of quota.
+        """
+        self._client = client
         self._api_key = api_key
         self._api_base_url = api_base_url.rstrip("/")
         self._chat_model = chat_model
@@ -35,7 +44,11 @@ class LocalGeneralKnowledgeProvider:
         question: str,
         history: list[ChatMessage] | None = None,
     ) -> str:
-        if self._api_key:
+        if self._client is not None:
+            client_answer = self._client_answer(question, history or [])
+            if client_answer:
+                return client_answer
+        elif self._api_key:
             hosted_answer = self._hosted_answer(question, history or [])
             if hosted_answer:
                 return hosted_answer
@@ -91,6 +104,42 @@ class LocalGeneralKnowledgeProvider:
         ).strip()
         return answer or "I could not generate a reliable general answer."
 
+    def _client_answer(
+        self,
+        question: str,
+        history: list[ChatMessage],
+    ) -> str | None:
+        from app.services.llm_client import LLMError
+
+        earlier = "\n".join(
+            f"{'User' if message.role.value == 'user' else 'Assistant'}: "
+            f"{message.content}"
+            for message in history[-12:]
+        )
+        user = f"{question}"
+        if earlier:
+            user = f"--- EARLIER IN THIS CONVERSATION ---\n{earlier}\n\n{question}"
+        try:
+            return (
+                self._client.complete_text(
+                    system=(
+                        "You are Source Intelligence, a chat assistant that answers "
+                        "questions about documents the user uploads (PDF, DOCX, "
+                        "TXT, Markdown, CSV, JSON, XLSX) with citations, and also "
+                        "holds normal conversations. You run on the "
+                        f"{self._client.model} model. Answer the user's intent "
+                        "directly: short for simple questions, more detail only "
+                        "when useful. Never claim that uploaded documents contain "
+                        "information. If uncertain about a fact, say so instead of "
+                        "inventing it."
+                    ),
+                    user=user,
+                ).strip()
+                or None
+            )
+        except LLMError:
+            return None
+
     def _hosted_answer(
         self,
         question: str,
@@ -100,7 +149,11 @@ class LocalGeneralKnowledgeProvider:
             {
                 "role": "system",
                 "content": (
-                    "You are a helpful, accurate conversational assistant. "
+                    "You are Source Intelligence, a chat assistant that answers "
+                    "questions about documents the user uploads (PDF, DOCX, "
+                    "TXT, Markdown, CSV, JSON, XLSX) with citations, and also "
+                    "holds normal conversations. You run on the "
+                    f"{self._chat_model} model. You are helpful and accurate. "
                     "Answer the user's intent directly. Use a short answer for "
                     "simple questions and more detail only when useful. Never "
                     "claim that uploaded documents contain information because "
