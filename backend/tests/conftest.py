@@ -19,6 +19,8 @@ TEST_DATABASE_URL = os.environ.setdefault(
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 os.environ.setdefault("REDIS_URL", "redis://127.0.0.1:6380/15")
 os.environ.setdefault("APP_ENV", "development")
+# Tests never load the real models in the background (app/core/warmup.py).
+os.environ["WARM_MODELS"] = "false"
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 

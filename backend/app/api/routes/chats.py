@@ -1,9 +1,14 @@
 import uuid
+from typing import Literal
 
 from fastapi import APIRouter, Depends, Response, status
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.auth.deps import Caller, current_caller
+from app.chat.deps import get_chat_service
+from app.chat.service import ChatService, Turn
 from app.db import repository
 from app.db.session import get_db
 from app.models.account import ChatCreate, ChatOut, ChatUpdate, MessageOut
@@ -67,3 +72,36 @@ def list_messages(
         MessageOut.model_validate(m)
         for m in repository.list_messages(db, caller.workspace.id, chat_id)
     ]
+
+
+class MessageCreate(BaseModel):
+    question: str = Field(min_length=1, max_length=4000)
+    scope: Literal["auto", "workspace", "general"] = "auto"
+
+
+@router.post("/chats/{chat_id}/messages")
+def send_message(
+    chat_id: uuid.UUID,
+    body: MessageCreate,
+    caller: Caller = Depends(current_caller),
+    db: Session = Depends(get_db),
+    service: ChatService = Depends(get_chat_service),
+) -> StreamingResponse:
+    """Ask a question; the answer streams back as server-sent events.
+
+    Ownership is checked before streaming starts, so another user's chat is a
+    plain 404 like everywhere else, not a stream that fails part-way.
+    """
+    repository.get_chat(db, caller.workspace.id, chat_id)
+    turn = Turn(
+        user_id=caller.user.id,
+        workspace_id=caller.workspace.id,
+        chat_id=chat_id,
+        question=body.question.strip(),
+        scope=body.scope,
+    )
+    return StreamingResponse(
+        service.run(turn),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )

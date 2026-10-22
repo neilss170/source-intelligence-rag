@@ -229,6 +229,8 @@ def evaluate_generation(service, questions: list[dict]) -> dict:
 
     def share(kind, key="correct"):
         selected = [r for r in rows if r["kind"] == kind]
+        if not selected:  # a subset run (--only) may skip a kind
+            return None
         return round(sum(bool(r[key]) for r in selected) / len(selected), 3)
 
     facts = [r for r in rows if r["kind"] == "fact"]
@@ -239,12 +241,103 @@ def evaluate_generation(service, questions: list[dict]) -> dict:
         "table_accuracy": share("table"),
         "abstention_accuracy": share("unanswerable"),
         "meta_correct": share("meta"),
-        "mean_groundedness_on_facts": round(
-            statistics.mean(r["groundedness"] for r in facts), 3
+        "mean_groundedness_on_facts": (
+            round(statistics.mean(r["groundedness"] for r in facts), 3)
+            if facts
+            else None
         ),
         "p50_ms": statistics.median(r["ms"] for r in rows),
         "rows": rows,
     }
+
+
+class StreamedAnswers:
+    """The streaming ChatService behind the ``.query()`` interface the
+    generation scorer expects, so both paths are graded identically.
+
+    Every question gets a fresh chat, so answers don't lean on each other.
+    """
+
+    def __init__(self, service, engine, workspace_id, user_id) -> None:
+        self._service = service
+        self._engine = engine
+        self._workspace_id = workspace_id
+        self._user_id = user_id
+
+    def query(self, request):
+        import asyncio
+        import re
+        from types import SimpleNamespace
+
+        from sqlalchemy.orm import Session
+
+        from app.chat.service import Turn
+        from app.db.models import Chat
+
+        with Session(self._engine) as db:
+            chat = Chat(workspace_id=self._workspace_id, title="Evaluation")
+            db.add(chat)
+            db.commit()
+            chat_id = chat.id
+
+        async def collect():
+            return [
+                event
+                async for event in self._service.run(
+                    Turn(self._user_id, self._workspace_id, chat_id, request.question)
+                )
+            ]
+
+        events = {}
+        for block in asyncio.run(collect()):
+            name = re.search(r"^event: (.+)$", block, re.M).group(1)
+            data = json.loads(re.search(r"^data: (.+)$", block, re.M).group(1))
+            events[name] = data
+        done = events.get("done") or {}
+        citations = [
+            SimpleNamespace(title=c["title"], excerpt=c["excerpt"])
+            for c in (events.get("citations") or {}).get("citations", [])
+        ]
+        mode = done.get("mode") or events.get("error", {}).get("code", "error")
+        groundedness = done.get("groundedness")
+        return SimpleNamespace(
+            answer=done.get("content") or events.get("error", {}).get("message", ""),
+            citations=citations,
+            mode=SimpleNamespace(value=mode),
+            grounded=mode == "workspace" and bool(citations),
+            groundedness_score=(
+                groundedness if groundedness is not None else float(bool(citations))
+            ),
+        )
+
+
+def streaming_service(engine):
+    """The production ChatService, bound to the evaluation database."""
+    from sqlalchemy.orm import sessionmaker
+
+    from app.chat.providers import ExhaustionStore, ModelRouter, model_chain
+    from app.chat.service import ChatService
+    from app.core.redis_client import get_redis
+    from app.services.citation_support import SupportVerifier
+    from app.services.cross_encoder_reranker import CrossEncoderReranker
+
+    settings = get_settings()
+    chain = model_chain(settings)
+    if not chain:
+        raise SystemExit("--generate needs CHAT_API_KEY or CHAT_MODELS")
+    # The evaluation user must not hit the per-user daily budget mid-run.
+    settings.daily_token_budget_per_user = 0
+    return ChatService(
+        settings=settings,
+        sessions=sessionmaker(bind=engine, expire_on_commit=False),
+        router=ModelRouter(chain, ExhaustionStore(get_redis())),
+        ranker=CrossEncoderReranker(
+            None, model_name=settings.reranker_model, probabilities=True
+        ),
+        verifier=SupportVerifier(
+            settings.nli_model, threshold=settings.support_threshold
+        ),
+    )
 
 
 #: Thresholds for --gate.
@@ -302,7 +395,7 @@ def postgres_workspace(directory: Path):
         for document in documents:
             assert index_document(db, document.id, storage) == "ready"
         try:
-            yield db, workspace_id
+            yield db, workspace_id, engine, user.id
         finally:
             db.rollback()
             db.delete(db.get(User, user.id))
@@ -324,14 +417,25 @@ def main() -> None:
     parser.add_argument(
         "--gate", action="store_true", help="exit 1 if retrieval misses the gates"
     )
+    parser.add_argument(
+        "--only", default="", help="comma-separated question ids, e.g. d01,d40,d46"
+    )
     args = parser.parse_args()
 
     questions = json.loads(EVAL_SET.read_text(encoding="utf-8"))
+    if args.only:
+        wanted = {q.strip() for q in args.only.split(",") if q.strip()}
+        questions = [q for q in questions if q["id"] in wanted]
     if args.backend == "postgres":
         from app.retrieval.pg import workspace_retriever
 
         with tempfile.TemporaryDirectory() as directory:
-            with postgres_workspace(Path(directory)) as (db, workspace_id):
+            with postgres_workspace(Path(directory)) as (
+                db,
+                workspace_id,
+                engine,
+                user_id,
+            ):
                 report = {
                     "backend": "postgres",
                     "retrieval": evaluate_retrieval(
@@ -339,6 +443,16 @@ def main() -> None:
                         questions,
                     ),
                 }
+                db.commit()
+                if args.generate:
+                    answers = StreamedAnswers(
+                        streaming_service(engine), engine, workspace_id, user_id
+                    )
+                    report["generation"] = evaluate_generation(answers, questions)
+                    summary = {
+                        k: v for k, v in report["generation"].items() if k != "rows"
+                    }
+                    print("Generation:", json.dumps(summary))
         _finish(args, report)
         return
 

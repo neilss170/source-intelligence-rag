@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
 from app.auth.deps import CSRF_HEADER
+from app.core import warmup
 from app.core.config import get_settings
 from app.core.errors import (
     REQUEST_ID_HEADER,
@@ -19,6 +20,8 @@ from app.core.storage import ensure_storage_directories
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     ensure_storage_directories()
+    if get_settings().warm_models:
+        warmup.start()
     yield
 
 

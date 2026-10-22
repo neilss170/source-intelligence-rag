@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     cookie_secure: bool | None = None
     session_days: int = Field(default=30, ge=1, le=365)
     min_password_length: int = Field(default=10, ge=8, le=128)
+    # Load the models in the background at startup (see app/core/warmup.py).
+    warm_models: bool = True
     max_file_size_mb: int = Field(default=10, ge=1, le=100)
     max_upload_files: int = Field(default=10, ge=1, le=50)
     max_workspace_mb: int = Field(default=200, ge=1)
@@ -40,6 +42,11 @@ class Settings(BaseSettings):
     llm_answers_enabled: bool = True
     # Comma-separated models to switch to when CHAT_MODEL's quota runs out.
     chat_fallback_models: str = ""
+    # JSON list of {name, base_url, api_key_env, kind}; overrides the three
+    # settings above and lets each model have its own endpoint and key.
+    chat_models: str = ""
+    # Tokens a user may spend per day across all models; 0 means unlimited.
+    daily_token_budget_per_user: int = Field(default=200_000, ge=0)
     # Passage characters sent whole before search takes over (~4k tokens).
     workspace_context_chars: int = Field(default=16_000, ge=0)
     # Passages handed to the model when the workspace is searched.

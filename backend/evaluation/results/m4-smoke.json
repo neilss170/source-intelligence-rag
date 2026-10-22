@@ -1,0 +1,117 @@
+{
+  "backend": "postgres",
+  "retrieval": {
+    "questions": 3,
+    "recall_at_k": 1.0,
+    "recall_at_1": 0.667,
+    "mrr": 0.833,
+    "mean_passages_returned": 3,
+    "p50_ms": 738,
+    "misses": [],
+    "rows": [
+      {
+        "id": "d02",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 837
+      },
+      {
+        "id": "d25",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": false,
+        "reciprocal_rank": 0.5,
+        "ms": 708
+      },
+      {
+        "id": "d34",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 738
+      }
+    ]
+  },
+  "generation": {
+    "fact_accuracy": 1.0,
+    "fact_cited_support": 1.0,
+    "fact_false_abstention": 0.0,
+    "table_accuracy": 1.0,
+    "abstention_accuracy": 1.0,
+    "meta_correct": 1.0,
+    "mean_groundedness_on_facts": 0.667,
+    "p50_ms": 2747.0,
+    "rows": [
+      {
+        "id": "d02",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 2839,
+        "answer": "Northwind Logistics earned 48.2 million EUR in 2025, an increase of 9 % over the previous year.[1]",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d25",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 2,
+        "groundedness": 0.0,
+        "ms": 2655,
+        "answer": "Yes. The 2026 capex budget of 6.5 million EUR exceeds the WMS migration cost of 2.3 million EUR by 4.2 million EUR.[1][2]",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d34",
+        "kind": "fact",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 1988,
+        "answer": "Up to two days per week.[1]",
+        "correct": true,
+        "cited_support": true,
+        "abstained": false
+      },
+      {
+        "id": "d40",
+        "kind": "table",
+        "mode": "workspace",
+        "citations": 1,
+        "groundedness": 1.0,
+        "ms": 2505,
+        "answer": "The total shipping cost across all shipments was €174,254.56 [1].",
+        "correct": true,
+        "expected": 174254.56
+      },
+      {
+        "id": "d46",
+        "kind": "unanswerable",
+        "mode": "workspace",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 4444,
+        "answer": "I couldn't find that in your uploaded documents. No information about CEO salary is provided.",
+        "correct": true
+      },
+      {
+        "id": "d51",
+        "kind": "meta",
+        "mode": "general",
+        "citations": 0,
+        "groundedness": 0.0,
+        "ms": 9384,
+        "answer": "The uploaded files are:\n- travel_expense_policy.txt  \n- employee_handbook.docx  \n- shipments_2025.csv  \n- operations_report_2025.md",
+        "correct": true
+      }
+    ]
+  }
+}

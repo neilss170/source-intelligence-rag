@@ -119,3 +119,74 @@ index until milestone 4.
 - **Tests:** 8 new, 167 in total. They cover OR semantics, exact
   identifiers, no results across workspaces for either search, the score
   floor, empty queries, and the helpers.
+
+## Milestone 4: Generation (2026-10-22)
+
+- **Answers stream.** `POST /api/chats/{id}/messages` returns server-sent
+  events: `status`, `token`, `citations`, `web_sources`, `verification`,
+  `done` (the stored message with mode, model, token usage and per-stage
+  timings) and `error` (stable code, readable message). Through Docker and
+  nginx, a document answer on a freshly started container showed its first
+  token at 2.1 s and finished at 2.9 s, with retrieval 0.3 s, generation
+  1.8 s and claim check 0.8 s. Ownership is checked before streaming
+  starts, so another user's chat is a plain 404.
+- **The measured prompt, shared.** `AnswerPrompt` builds the prompt and reads
+  the reply for both the streaming service and the evaluation path, so they
+  can't drift. Citation markers are resolved while streaming: a property test
+  checks the streamed text matches the batch resolver under 200 random
+  chunkings per case. The first characters are held until it is clear the
+  reply isn't `SQL:` or `INSUFFICIENT_CONTEXT`, so those never appear on
+  screen.
+- **Paths:**
+  - documents (whole workspace when it fits, else hybrid search), with up to
+    two SQL rounds for spreadsheets;
+  - general chat, when the scope says so or nothing is uploaded yet;
+  - live web search, when configured and the question needs it;
+  - an explicit "no documents yet" reply for document-only scope on an
+    empty workspace.
+
+  Follow-ups are rewritten into standalone questions, and the last four
+  exchanges are replayed.
+- **Providers:** streaming adapters for the OpenAI format (OpenAI, Groq,
+  OpenRouter, Ollama, vLLM) and Anthropic's Messages API. `CHAT_MODELS` gives
+  each model its own endpoint and key.
+  - A rate limit under 20 s is waited out once.
+  - A longer one marks the model exhausted in Redis, shared by every worker,
+    and the same request moves to the next model. This happened for real
+    during the smoke test.
+  - A failure after the first token is not retried elsewhere.
+  - When every model is out, the reply says how long until one is back.
+- **Budgets:** token usage is recorded per user, model and day (an atomic
+  upsert). `DAILY_TOKEN_BUDGET_PER_USER` is checked before any model call.
+- **Prompt-injection defence:** the system prompt treats passages, file
+  names and query results as quoted material, never instructions.
+  Zero-width, bidirectional-override and control characters are stripped
+  from everything taken from documents.
+- **Readiness covers the models.** They load in the background at startup,
+  and `/api/ready` reports `models: loading` until they're done (24 s on a
+  fresh container). Before this, the first question downloaded the reranker
+  and claim checker mid-request and took 16 s to its first token. Requests
+  refused early (signed out, someone else's chat) never trigger a load.
+- **Retired:** the prototype's unauthenticated `/api/query`.
+  `LEGACY_UNSCOPED_ROUTES` is now empty: every API route requires an
+  account.
+- **Fixed:** a no-break space before a citation (`56 [E1]`) survived
+  as a stray space in the answer. Invisible characters that had crept into
+  source files as literals are now readable escapes.
+- **Evaluation:** `evaluate_documents.py --backend postgres --generate` runs
+  the real streaming service end to end, and `--only` picks a subset. A
+  6-question smoke test with the real model scored 6/6:
+  - a fact with its citation;
+  - a two-source comparison;
+  - an exact SQL total (€174,254.56);
+  - a correct abstention;
+  - the workspace question;
+  - a handbook fact.
+
+  **The full 51-question generation gate is still to run.** It uses most of
+  a free Groq key's daily token allowance, which Scribe shares.
+- **Tests:** 31 new, 198 in total. They cover the event stream, storage, SQL
+  round trips, abstention, general and empty-workspace paths, follow-up
+  rewriting, budgets, quota exhaustion, claim verification, hidden
+  characters, provider parsing (OpenAI and Anthropic formats), the fallback
+  chain, shared quota state in Redis and model configuration.
