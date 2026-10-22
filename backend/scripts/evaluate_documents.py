@@ -13,7 +13,9 @@ abstention on unanswerable questions, and the workspace question.
 """
 
 import argparse
+import contextlib
 import json
+import os
 import re
 import statistics
 import sys
@@ -37,6 +39,9 @@ from app.services.uploaded_evidence_repository import (  # noqa: E402
 EVAL_SET = BACKEND_DIR / "evaluation" / "document_eval_set.json"
 RESULTS_DIR = BACKEND_DIR / "evaluation" / "results"
 TOP_K = 8
+TEST_DATABASE_URL = (
+    "postgresql+psycopg://si:si_dev_password@127.0.0.1:5433/source_intelligence_test"
+)
 
 
 def normalize(text: str) -> str:
@@ -242,14 +247,101 @@ def evaluate_generation(service, questions: list[dict]) -> dict:
     }
 
 
+#: Thresholds for --gate (docs/REBUILD_PROMPT.md, section 12).
+GATES = {"recall_at_k": 0.95, "mrr": 0.90}
+
+
+@contextlib.contextmanager
+def postgres_workspace(directory: Path):
+    """The corpus indexed by the real worker pipeline into a throwaway
+    workspace of the test database. Yields ``(session, workspace_id)``."""
+    import uuid
+
+    from alembic.config import Config
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+
+    from alembic import command
+    from app.db.models import Document, User, Workspace
+    from app.ingest.pipeline import index_document
+    from app.ingest.storage import LocalFileStorage
+    from app.ingest.validation import detect_kind
+
+    url = os.environ.get("TEST_DATABASE_URL", TEST_DATABASE_URL)
+    config = Config(str(BACKEND_DIR / "alembic.ini"))
+    config.set_main_option("script_location", str(BACKEND_DIR / "alembic"))
+    config.set_main_option("sqlalchemy.url", url)
+    command.upgrade(config, "head")
+
+    engine = create_engine(url)
+    storage = LocalFileStorage(directory / "files")
+    with Session(engine) as db:
+        user = User(
+            email=f"eval-{uuid.uuid4().hex[:8]}@example.invalid",
+            name="Evaluation",
+            password_hash="!",
+        )
+        user.workspaces.append(Workspace(name="Evaluation"))
+        db.add(user)
+        db.flush()
+        workspace_id = user.workspaces[0].id
+        documents = []
+        for filename, content in corpus().items():
+            kind = detect_kind(filename, content)
+            document = Document(
+                workspace_id=workspace_id,
+                filename=filename,
+                kind=kind,
+                size_bytes=len(content),
+                checksum=uuid.uuid4().hex,
+                storage_key=storage.put(content, kind),
+            )
+            db.add(document)
+            documents.append(document)
+        db.commit()
+        for document in documents:
+            assert index_document(db, document.id, storage) == "ready"
+        try:
+            yield db, workspace_id
+        finally:
+            db.rollback()
+            db.delete(db.get(User, user.id))
+            db.commit()
+    engine.dispose()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--name", required=True)
     parser.add_argument("--generate", action="store_true")
     parser.add_argument("--legacy", action="store_true", help="old retrieval chain")
+    parser.add_argument(
+        "--backend",
+        choices=["memory", "postgres"],
+        default="memory",
+        help="postgres: index into the test database and search it there",
+    )
+    parser.add_argument(
+        "--gate", action="store_true", help="exit 1 if retrieval misses the gates"
+    )
     args = parser.parse_args()
 
     questions = json.loads(EVAL_SET.read_text(encoding="utf-8"))
+    if args.backend == "postgres":
+        from app.retrieval.pg import workspace_retriever
+
+        with tempfile.TemporaryDirectory() as directory:
+            with postgres_workspace(Path(directory)) as (db, workspace_id):
+                report = {
+                    "backend": "postgres",
+                    "retrieval": evaluate_retrieval(
+                        workspace_retriever(db, workspace_id, get_settings()),
+                        questions,
+                    ),
+                }
+        _finish(args, report)
+        return
+
     with tempfile.TemporaryDirectory() as directory:
         evidence, uploads = ingest(Path(directory))
         cache_dir = Path(directory) / "index"
@@ -272,11 +364,27 @@ def main() -> None:
             )
             summary = {k: v for k, v in report["generation"].items() if k != "rows"}
             print("Generation:", json.dumps(summary))
+    _finish(args, report)
 
+
+def _finish(args, report: dict) -> None:
+    if args.backend == "postgres":
+        summary = {k: v for k, v in report["retrieval"].items() if k != "rows"}
+        print("Retrieval:", json.dumps(summary))
     RESULTS_DIR.mkdir(exist_ok=True)
     (RESULTS_DIR / f"{args.name}.json").write_text(
         json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
     )
+    if args.gate:
+        missed = {
+            metric: report["retrieval"][metric]
+            for metric, floor in GATES.items()
+            if report["retrieval"][metric] < floor
+        }
+        if missed:
+            print(f"GATE FAILED: {missed} (need {GATES})")
+            sys.exit(1)
+        print(f"Gate passed: {GATES}")
 
 
 if __name__ == "__main__":

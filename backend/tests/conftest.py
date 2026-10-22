@@ -150,3 +150,9 @@ def ingestion(tmp_path, monkeypatch, db):
     app.dependency_overrides[get_queue] = lambda: queue
     yield queue
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def fake_encoder():
+    """The deterministic encoder ingestion uses in tests, for query encoding too."""
+    return FakeEncoder()
