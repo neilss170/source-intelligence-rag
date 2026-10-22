@@ -386,3 +386,22 @@ def test_no_database_connection_is_held_while_the_answer_streams(chat) -> None:
 
     # Under load, a connection held per stream exhausted the pool.
     assert held == [0]
+
+
+def test_an_unreachable_model_is_reported_as_unreachable(chat) -> None:
+    from app.chat.providers import ModelsUnavailable
+
+    _, _, script, ask, upload = chat
+    upload("report.md", REPORT)
+    script(ModelsUnavailable("down"))
+
+    events = ask("How big is the fleet?")
+
+    assert events[-1] == (
+        "error",
+        {
+            "code": "model_unavailable",
+            "message": "Couldn't reach the language model just now. Check the "
+            "connection and try again.",
+        },
+    )

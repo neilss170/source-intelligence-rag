@@ -93,6 +93,12 @@ class AllModelsExhausted(Exception):
         self.retry_after = retry_after
 
 
+class ModelsUnavailable(Exception):
+    """Every model failed for a reason other than quota - unreachable,
+    overloaded or erroring. Reported differently from running out: "try
+    again in a minute" is wrong advice for a network outage."""
+
+
 def model_chain(settings: Settings) -> list[ModelSpec]:
     """The configured models, in order of preference.
 
@@ -206,6 +212,7 @@ class ModelRouter:
         # Generous max_tokens on purpose: reasoning models (gpt-oss) spend
         # part of it thinking and return nothing under a tight cap.
         soonest = float("inf")
+        unavailable = False
         for spec in self._chain:
             remaining = await self._store.remaining(spec.name)
             if remaining > 0:
@@ -241,8 +248,13 @@ class ModelRouter:
                         logger.warning(
                             "%s failed (%s); trying the next model", spec.name, exc
                         )
+                        unavailable = True
                         break
                     raise
+        if unavailable:
+            # At least one model was down rather than out of quota: say so,
+            # instead of a quota message with an invented wait.
+            raise ModelsUnavailable("No language model could be reached")
         raise AllModelsExhausted(
             soonest if soonest != float("inf") else DEFAULT_EXHAUSTED_S
         )

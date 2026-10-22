@@ -46,6 +46,10 @@ services:
       REDIS_URL: redis://redis:6379/0
       DATA_DIR: /data
       HF_HOME: /models
+    # Lets the api reach services on the host, such as a local Ollama, on
+    # Linux too (Docker Desktop provides this name already).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"]
     volumes:
       - app-data:/data
