@@ -5,6 +5,7 @@ signs out and in, and checks for console errors. Uses a real model call.
 
     pip install playwright && playwright install chromium
     python e2e/ui_flow.py backend/evaluation/documents/operations_report_2025.md
+"""
 
 import random
 import re
