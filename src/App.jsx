@@ -1,13 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowUp,
-  Check,
-  ChevronDown,
-  Copy,
   Calculator,
   Columns2,
   FileText,
   Layers3,
+  LogOut,
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
@@ -15,24 +13,21 @@ import {
   Pencil,
   Plus,
   Sparkles,
+  Square,
   Trash2,
   Upload,
 } from "lucide-react";
-import {
-  askAssistant,
-  deleteDocument,
-  listDocuments,
-  uploadDocuments,
-} from "./api";
+import { api } from "./api";
+import { Answer, fromServer } from "./Answer";
+import { AuthScreen } from "./AuthScreen";
 
-const STORAGE_KEY = "source-intelligence-chats-v1";
-const USER_NAME = "Neil";
 const suggestions = [
   { icon: FileText, text: "Summarise my uploaded documents" },
   { icon: Calculator, text: "Total and average a column in my spreadsheet" },
   { icon: Columns2, text: "Compare the key figures across my files" },
   { icon: Sparkles, text: "What can you do with my documents?" },
 ];
+const PENDING = new Set(["uploaded", "indexing"]);
 
 function greeting() {
   const hour = new Date().getHours();
@@ -41,348 +36,362 @@ function greeting() {
   return "Good evening";
 }
 
-// Answer text marks its sources as [1], [2]; show them as small numbered
-// badges that match the citation list below the answer.
-function withCitationMarks(text) {
-  return text.split(/(\[\d+\])/g).map((part, index) => {
-    const match = /^\[(\d+)\]$/.exec(part);
-    return match ? <sup className="cite-mark" key={index}>{match[1]}</sup> : part;
-  });
-}
-
-function Answer({ answer }) {
-  const [showSources, setShowSources] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const sources = [
-    ...answer.citations.map((citation, index) => ({
-      key: citation.evidence_id,
-      number: index + 1,
-      title: citation.title.split(" > ").slice(-1)[0],
-      file: citation.title.split(" > ")[0],
-      page: citation.page,
-      excerpt: citation.excerpt,
-    })),
-    ...(answer.webSources || []).map((source, index) => ({
-      key: source.url,
-      number: answer.citations.length + index + 1,
-      title: source.title,
-      url: source.url,
-      excerpt: source.excerpt,
-    })),
-  ];
-  const unverified = answer.unsupportedClaims || [];
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(answer.body.replace(/\[\d+\]/g, ""));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // Clipboard can be blocked; nothing to undo.
-    }
-  }
-
+function Backdrop() {
   return (
-    <article className="answer">
-      <div className="answer-copy">
-        {answer.body.split("\n\n").map((paragraph, index) => <p key={index}>{withCitationMarks(paragraph)}</p>)}
-      </div>
-
-      <div className="answer-meta">
-        {sources.length > 0 && (
-          <button className="meta-button" type="button" aria-expanded={showSources} onClick={() => setShowSources((open) => !open)}>
-            {sources.length} {sources.length === 1 ? "source" : "sources"}
-            <ChevronDown size={13} className={showSources ? "flipped" : ""} />
-          </button>
-        )}
-        {answer.mode === "general" && <span className="meta-note">Not from your documents</span>}
-        {unverified.length > 0 && (
-          <span className="meta-note warn" title={unverified.join("\n")}>
-            {unverified.length === 1 ? "1 line unverified" : `${unverified.length} lines unverified`}
-          </span>
-        )}
-        <button className="meta-icon" type="button" onClick={copy} aria-label="Copy answer">
-          {copied ? <Check size={13} /> : <Copy size={13} />}
-        </button>
-      </div>
-
-      {showSources && (
-        <ol className="sources">
-          {sources.map((source) => (
-            <li key={source.key}>
-              <span className="source-number">{source.number}</span>
-              <div>
-                {source.url ? (
-                  <a href={source.url} target="_blank" rel="noreferrer">{source.title}</a>
-                ) : (
-                  <strong>{source.title}</strong>
-                )}
-                {source.file && <span className="source-file">{source.file}{source.page ? ` · p. ${source.page}` : ""}</span>}
-                {source.excerpt && <p>{source.excerpt}</p>}
-              </div>
-            </li>
-          ))}
-          {unverified.length > 0 && (
-            <li className="unverified">
-              <span className="source-number">!</span>
-              <div>
-                <strong>Not clearly supported by the sources</strong>
-                {unverified.map((claim) => <p key={claim}>{claim}</p>)}
-              </div>
-            </li>
-          )}
-        </ol>
-      )}
-    </article>
+    <div className="backdrop" aria-hidden="true">
+      <span className="glow" />
+      <span className="streak streak-one" />
+      <span className="streak streak-two" />
+      <span className="streak streak-three" />
+    </div>
   );
 }
 
-function makeChat() {
-  return {
-    id: crypto.randomUUID(),
-    title: "New chat",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    answers: [],
-  };
-}
+export default function App() {
+  // undefined while checking the session, null when signed out.
+  const [session, setSession] = useState(undefined);
 
-function loadChats() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return Array.isArray(saved) && saved.length ? saved : [makeChat()];
-  } catch {
-    return [makeChat()];
+  useEffect(() => {
+    api.me().then(setSession).catch(() => setSession(null));
+  }, []);
+
+  if (session === undefined) {
+    return <div className="app-shell"><Backdrop /></div>;
   }
+  if (!session) {
+    return (
+      <div className="app-shell">
+        <Backdrop />
+        <AuthScreen onSignedIn={setSession} />
+      </div>
+    );
+  }
+  return <Workspace session={session} onSignedOut={() => setSession(null)} />;
 }
 
-function historyFromAnswers(answers) {
-  return answers.slice(-6).flatMap((answer) => [
-    { role: "user", content: answer.question },
-    { role: "assistant", content: answer.body },
-  ]);
-}
-
-function App() {
-  const initialChats = useMemo(loadChats, []);
-  const [chats, setChats] = useState(initialChats);
-  const [activeChatId, setActiveChatId] = useState(initialChats[0].id);
+function Workspace({ session, onSignedOut }) {
   const [sidebarOpen, setSidebarOpen] = useState(
     () => window.matchMedia("(min-width: 900px)").matches,
   );
-  const [query, setQuery] = useState("");
-  const [pendingQuestion, setPendingQuestion] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
-  const [deletingDocumentId, setDeletingDocumentId] = useState("");
+  const [chats, setChats] = useState([]);
+  const [activeChatId, setActiveChatId] = useState(null);
+  const [messages, setMessages] = useState({});
   const [documents, setDocuments] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(null);
+  const [deletingId, setDeletingId] = useState("");
   const [scope, setScope] = useState("auto");
+  const [query, setQuery] = useState("");
+  const [error, setError] = useState("");
+  const [streaming, setStreaming] = useState(false);
+  const abortRef = useRef(null);
   const fileInput = useRef(null);
   const scrollArea = useRef(null);
+  const firstName = (session.user.name || "").split(" ")[0] || "there";
+  const thread = activeChatId ? messages[activeChatId] || [] : [];
 
-  const activeChat = chats.find((chat) => chat.id === activeChatId) || chats[0];
-  const answers = activeChat?.answers || [];
+  // Any failure that means "your session ended" sends you back to sign in.
+  const handle = useCallback(
+    (failure) => {
+      if (failure?.status === 401) onSignedOut();
+      else if (failure?.name !== "AbortError") setError(failure.message);
+    },
+    [onSignedOut],
+  );
+
+  const refreshChats = useCallback(
+    () => api.listChats().then(setChats).catch(handle),
+    [handle],
+  );
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(chats));
-    } catch {
-      // Storage can be full or blocked; chats still work for this session.
-    }
-  }, [chats]);
+    refreshChats();
+    api.listDocuments().then(setDocuments).catch(handle);
+  }, [refreshChats, handle]);
+
+  // Poll while anything is still indexing.
+  const anyPending = documents.some((d) => PENDING.has(d.status));
+  useEffect(() => {
+    if (!anyPending) return undefined;
+    const timer = setInterval(() => {
+      api.listDocuments().then(setDocuments).catch(handle);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [anyPending, handle]);
 
   useEffect(() => {
     scrollArea.current?.scrollTo({ top: scrollArea.current.scrollHeight, behavior: "smooth" });
-  }, [answers.length, isGenerating, activeChatId]);
+  }, [thread.length, thread[thread.length - 1]?.content, activeChatId]);
 
-  useEffect(() => {
-    listDocuments()
-      .then(setDocuments)
-      .catch(() => setError("Indexed documents could not be loaded."));
-  }, []);
+  async function openChat(chatId) {
+    setActiveChatId(chatId);
+    setError("");
+    if (window.matchMedia("(max-width: 899px)").matches) setSidebarOpen(false);
+    if (!messages[chatId]) {
+      try {
+        const stored = await api.listMessages(chatId);
+        setMessages((all) => ({ ...all, [chatId]: stored.map(fromServer) }));
+      } catch (failure) {
+        handle(failure);
+      }
+    }
+  }
 
-  function createChat() {
-    const chat = makeChat();
-    setChats((current) => [chat, ...current]);
-    setActiveChatId(chat.id);
+  function newChat() {
+    // The chat is created on the server with its first question.
+    setActiveChatId(null);
     setQuery("");
     setError("");
   }
 
-  function removeChat(chatId) {
-    setChats((current) => {
-      const remaining = current.filter((chat) => chat.id !== chatId);
-      const next = remaining.length ? remaining : [makeChat()];
-      if (chatId === activeChatId) setActiveChatId(next[0].id);
-      return next;
-    });
-  }
-
-  function renameChat(chat) {
+  async function renameChat(chat) {
     const title = window.prompt("Rename chat", chat.title)?.trim();
     if (!title) return;
-    setChats((current) =>
-      current.map((item) => item.id === chat.id ? { ...item, title } : item),
-    );
-  }
-
-  async function handleUpload(event) {
-    const selected = Array.from(event.target.files || []);
-    event.target.value = "";
-    if (!selected.length) return;
-    setIsUploading(true);
-    setError("");
     try {
-      const results = await uploadDocuments(selected);
-      setDocuments((current) => [
-        ...current,
-        ...results.filter(
-          (result) => !current.some((item) => item.document_id === result.document_id),
-        ),
-      ]);
-    } catch (uploadError) {
-      setError(uploadError.message);
-    } finally {
-      setIsUploading(false);
+      const renamed = await api.renameChat(chat.id, title);
+      setChats((all) => all.map((c) => (c.id === chat.id ? renamed : c)));
+    } catch (failure) {
+      handle(failure);
     }
   }
 
-  function submit(event) {
-    event.preventDefault();
-    ask(query);
+  async function deleteChat(chat) {
+    if (!window.confirm(`Delete "${chat.title}"?`)) return;
+    try {
+      await api.deleteChat(chat.id);
+      setChats((all) => all.filter((c) => c.id !== chat.id));
+      if (activeChatId === chat.id) setActiveChatId(null);
+    } catch (failure) {
+      handle(failure);
+    }
   }
 
   async function ask(text) {
-    const prompt = text.trim();
-    if (!prompt || isGenerating || !activeChat) return;
-    setPendingQuestion(prompt);
+    const question = text.trim();
+    if (!question || streaming) return;
+    setError("");
     setQuery("");
-    setIsGenerating(true);
-    setError("");
-    try {
-      const result = await askAssistant(
-        prompt,
-        scope,
-        historyFromAnswers(activeChat.answers),
-        activeChat.id,
-      );
-      const answer = {
-        id: crypto.randomUUID(),
-        question: prompt,
-        body: result.answer,
-        citations: result.citations,
-        webSources: result.web_sources || [],
-        grounded: result.grounded,
-        unsupportedClaims: result.unsupported_claims || [],
-        queryType: result.query_type,
-        mode: result.mode,
-        createdAt: Date.now(),
-      };
-      setChats((current) => current.map((chat) => {
-        if (chat.id !== activeChat.id) return chat;
-        return {
-          ...chat,
-          title: chat.answers.length === 0 ? prompt.slice(0, 42) : chat.title,
-          answers: [...chat.answers, answer],
-          updatedAt: Date.now(),
-        };
+
+    let chatId = activeChatId;
+    if (!chatId) {
+      try {
+        const chat = await api.createChat();
+        chatId = chat.id;
+        setChats((all) => [chat, ...all]);
+        setMessages((all) => ({ ...all, [chatId]: [] }));
+        setActiveChatId(chatId);
+      } catch (failure) {
+        setQuery(question);
+        handle(failure);
+        return;
+      }
+    }
+
+    const answerId = `pending-${Date.now()}`;
+    setMessages((all) => ({
+      ...all,
+      [chatId]: [
+        ...(all[chatId] || []),
+        { id: `${answerId}-q`, role: "user", content: question },
+        { id: answerId, role: "assistant", content: "", streaming: true, question },
+      ],
+    }));
+    const patch = (change) =>
+      setMessages((all) => ({
+        ...all,
+        [chatId]: (all[chatId] || []).map((m) =>
+          m.id === answerId ? { ...m, ...(typeof change === "function" ? change(m) : change) } : m,
+        ),
       }));
-    } catch {
-      setQuery(prompt);
-      setError("The assistant is unavailable. Make sure the API is running and try again.");
-    } finally {
-      setIsGenerating(false);
-    }
-  }
 
-  async function handleDelete(document) {
-    setDeletingDocumentId(document.document_id);
-    setError("");
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setStreaming(true);
+    let finished = false;
     try {
-      await deleteDocument(document.document_id);
-      setDocuments((current) =>
-        current.filter((item) => item.document_id !== document.document_id),
-      );
-    } catch (deleteError) {
-      setError(deleteError.message);
+      await api.ask(chatId, question, scope, {
+        signal: controller.signal,
+        onEvent(name, data) {
+          if (name === "status") patch({ status: data.text });
+          else if (name === "token") patch((m) => ({ content: m.content + data.text }));
+          else if (name === "citations") patch({ citations: data.citations });
+          else if (name === "web_sources") patch({ webSources: data.sources });
+          else if (name === "verification") patch({ unsupported: data.unsupported_claims });
+          else if (name === "done") {
+            finished = true;
+            patch({ id: data.message_id, content: data.content, mode: data.mode, streaming: false });
+          } else if (name === "error") {
+            finished = true;
+            patch({ error: data, streaming: false });
+          }
+        },
+      });
+      if (!finished) {
+        patch({ streaming: false, error: { code: "interrupted", message: "The answer was interrupted." } });
+      }
+    } catch (failure) {
+      if (failure.name === "AbortError") patch({ streaming: false, stopped: true });
+      else {
+        patch({ streaming: false, error: { code: failure.code, message: failure.message } });
+        if (failure.status === 401) onSignedOut();
+      }
     } finally {
-      setDeletingDocumentId("");
+      abortRef.current = null;
+      setStreaming(false);
+      refreshChats();
     }
   }
 
-  const showGreeting = answers.length === 0 && !isGenerating;
+  function retry(message) {
+    setMessages((all) => ({
+      ...all,
+      [activeChatId]: (all[activeChatId] || []).filter(
+        (m) => m.id !== message.id && m.id !== `${message.id}-q`,
+      ),
+    }));
+    ask(message.question);
+  }
+
+  async function upload(event) {
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (!files.length) return;
+    setError("");
+    setUploadProgress(0);
+    try {
+      const accepted = await api.uploadDocuments(files, setUploadProgress);
+      setDocuments((all) => [
+        ...accepted.filter((doc) => !all.some((d) => d.id === doc.id)),
+        ...all,
+      ]);
+    } catch (failure) {
+      handle(failure);
+    } finally {
+      setUploadProgress(null);
+    }
+  }
+
+  async function removeDocument(doc) {
+    setDeletingId(doc.id);
+    try {
+      await api.deleteDocument(doc.id);
+      setDocuments((all) => all.filter((d) => d.id !== doc.id));
+    } catch (failure) {
+      handle(failure);
+    } finally {
+      setDeletingId("");
+    }
+  }
+
+  async function signOut() {
+    abortRef.current?.abort();
+    try {
+      await api.logOut();
+    } catch {
+      // Signed out either way.
+    }
+    onSignedOut();
+  }
+
+  const readyCount = documents.filter((d) => d.status === "ready").length;
+  const indexingCount = documents.filter((d) => PENDING.has(d.status)).length;
+  const showGreeting = thread.length === 0;
 
   return (
     <div className={`app-shell ${sidebarOpen ? "sidebar-visible" : ""}`}>
-      <div className="backdrop" aria-hidden="true">
-        <span className="glow" />
-        <span className="streak streak-one" />
-        <span className="streak streak-two" />
-        <span className="streak streak-three" />
-      </div>
-
+      <Backdrop />
       {sidebarOpen && (
-        <button className="scrim" type="button" aria-label="Close chat history" onClick={() => setSidebarOpen(false)} />
+        <button className="scrim" type="button" aria-label="Close sidebar" onClick={() => setSidebarOpen(false)} />
       )}
 
-      <aside className={`chat-sidebar ${sidebarOpen ? "open" : ""}`}>
+      <aside className={`chat-sidebar ${sidebarOpen ? "open" : ""}`} aria-label="Chats and documents">
         <div className="sidebar-header">
           <span className="brand-mark"><Layers3 size={15} /></span>
           <strong>Chats</strong>
-          <button className="ghost-icon" type="button" onClick={() => setSidebarOpen(false)} aria-label="Close chat history">
+          <button className="ghost-icon" type="button" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar">
             <PanelLeftClose size={17} />
           </button>
         </div>
-        <button className="new-chat" type="button" onClick={createChat}>
+        <button className="new-chat" type="button" onClick={newChat}>
           <Plus size={16} /> New chat
         </button>
-        <div className="chat-list">
-          {[...chats].sort((a, b) => b.updatedAt - a.updatedAt).map((chat) => (
+        <nav className="chat-list" aria-label="Chats">
+          {chats.length === 0 && <p className="sidebar-note">Your chats will appear here.</p>}
+          {chats.map((chat) => (
             <div className={`chat-row ${chat.id === activeChatId ? "active" : ""}`} key={chat.id}>
-              <button className="chat-select" type="button" onClick={() => setActiveChatId(chat.id)}>
+              <button
+                className="chat-select"
+                type="button"
+                onClick={() => openChat(chat.id)}
+                aria-current={chat.id === activeChatId ? "page" : undefined}
+              >
                 <MessageSquare size={14} />
                 <span>{chat.title}</span>
               </button>
               <div className="chat-actions">
                 <button type="button" onClick={() => renameChat(chat)} aria-label={`Rename ${chat.title}`}><Pencil size={12} /></button>
-                <button type="button" onClick={() => removeChat(chat.id)} aria-label={`Delete ${chat.title}`}><Trash2 size={12} /></button>
+                <button type="button" onClick={() => deleteChat(chat)} aria-label={`Delete ${chat.title}`}><Trash2 size={12} /></button>
               </div>
             </div>
           ))}
-        </div>
+        </nav>
 
         <div className="sidebar-section">
           <span className="sidebar-label">Documents</span>
           {documents.length === 0 && <p className="sidebar-note">Nothing uploaded yet.</p>}
-          <div className="document-list" aria-label="Indexed documents">
-            {documents.map((document) => (
-              <span className="document-chip" key={document.document_id}>
+          <ul className="document-list" aria-label="Your documents">
+            {documents.map((doc) => (
+              <li className={`document-chip ${doc.status}`} key={doc.id}>
                 <FileText size={12} />
-                <span className="document-name">{document.filename}</span>
-                <button type="button" className="remove-document" aria-label={`Remove ${document.filename}`} disabled={deletingDocumentId === document.document_id} onClick={() => handleDelete(document)}>
+                <span className="document-name" title={doc.filename}>{doc.filename}</span>
+                {PENDING.has(doc.status) && <span className="doc-badge">Indexing…</span>}
+                {doc.status === "failed" && <span className="doc-badge failed" title={doc.error}>Failed</span>}
+                <button
+                  type="button"
+                  className="remove-document"
+                  aria-label={`Delete ${doc.filename}`}
+                  disabled={deletingId === doc.id}
+                  onClick={() => removeDocument(doc)}
+                >
                   <Trash2 size={12} />
                 </button>
-              </span>
+                {doc.status === "failed" && doc.error && <span className="doc-error">{doc.error}</span>}
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
+
         <div className="sidebar-section">
           <span className="sidebar-label">Answer from</span>
-          <div className="scope-switcher" aria-label="Answer source">
+          <div className="scope-switcher" role="radiogroup" aria-label="Answer from">
             {[["auto", "Auto"], ["workspace", "Documents"], ["general", "General"]].map(([value, label]) => (
-              <button className={scope === value ? "active" : ""} key={value} type="button" onClick={() => setScope(value)}>{label}</button>
+              <button
+                className={scope === value ? "active" : ""}
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={scope === value}
+                onClick={() => setScope(value)}
+              >
+                {label}
+              </button>
             ))}
           </div>
         </div>
-        <p className="sidebar-note">Chats are saved privately in this browser.</p>
+
+        <div className="sidebar-account">
+          <span className="avatar small" aria-hidden="true">{firstName.slice(0, 1).toUpperCase()}</span>
+          <span className="account-email" title={session.user.email}>{session.user.email}</span>
+          <button className="ghost-icon" type="button" onClick={signOut} aria-label="Sign out">
+            <LogOut size={15} />
+          </button>
+        </div>
       </aside>
 
       <div className="page-column">
         <header className="topbar">
           <div className="brand-wrap">
             {!sidebarOpen && (
-              <button className="glass-icon" type="button" onClick={() => setSidebarOpen(true)} aria-label="Open chat history">
+              <button className="glass-icon" type="button" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar">
                 <PanelLeftOpen size={18} />
               </button>
             )}
@@ -390,45 +399,61 @@ function App() {
           </div>
           <div className="top-actions">
             <span className="doc-pill">
-              <span className={`status-dot ${documents.length ? "ready" : ""}`} />
-              {documents.length ? `${documents.length} ${documents.length === 1 ? "document" : "documents"}` : "No documents"}
+              <span className={`status-dot ${readyCount ? "ready" : ""}`} />
+              {indexingCount
+                ? `Indexing ${indexingCount}…`
+                : readyCount
+                  ? `${readyCount} ${readyCount === 1 ? "document" : "documents"}`
+                  : "No documents"}
             </span>
-            <button className="glass-button" type="button" disabled={isUploading} onClick={() => fileInput.current?.click()}>
-              <Upload size={15} /> <span className="hide-small">{isUploading ? "Indexing..." : "Upload"}</span>
+            <button className="glass-button" type="button" disabled={uploadProgress !== null} onClick={() => fileInput.current?.click()}>
+              <Upload size={15} />
+              <span className="hide-small">
+                {uploadProgress !== null ? `Uploading ${Math.round(uploadProgress * 100)}%` : "Upload"}
+              </span>
             </button>
-            <input ref={fileInput} className="sr-only" type="file" accept=".pdf,.docx,.txt,.md,.markdown,.csv,.json,.xlsx" multiple onChange={handleUpload} />
+            <input ref={fileInput} className="sr-only" type="file" accept=".pdf,.docx,.txt,.md,.markdown,.csv,.json,.xlsx" multiple onChange={upload} />
           </div>
+          {uploadProgress !== null && (
+            <div className="upload-bar" role="progressbar" aria-label="Upload progress" aria-valuenow={Math.round(uploadProgress * 100)} aria-valuemin={0} aria-valuemax={100}>
+              <span style={{ width: `${Math.round(uploadProgress * 100)}%` }} />
+            </div>
+          )}
         </header>
 
         <main className="conversation" ref={scrollArea}>
           {showGreeting ? (
             <section className="greeting">
-              <span className="avatar" aria-hidden="true">{USER_NAME.slice(0, 1)}</span>
-              <h1>{greeting()},<br />{USER_NAME}</h1>
+              <span className="avatar" aria-hidden="true">{firstName.slice(0, 1).toUpperCase()}</span>
+              <h1>{greeting()},<br />{firstName}</h1>
               <p>Ask about your documents, or ask anything.</p>
             </section>
           ) : (
             <div className="thread" aria-live="polite">
-              {answers.map((answer) => (
-                <div className="turn" key={answer.id}>
-                  <div className="question">{answer.question}</div>
-                  <Answer answer={answer} />
-                </div>
-              ))}
-              {isGenerating && (
-                <div className="turn">
-                  <div className="question">{pendingQuestion}</div>
-                  <div className="thinking" role="status" aria-label="Thinking"><span /><span /><span /></div>
-                </div>
+              {thread.map((message) =>
+                message.role === "user" ? (
+                  <div className="question" key={message.id}>{message.content}</div>
+                ) : (
+                  <Answer
+                    key={message.id}
+                    message={message}
+                    onRetry={message.error && message.question ? () => retry(message) : undefined}
+                  />
+                ),
               )}
             </div>
           )}
         </main>
 
         <div className="dock">
-          {error && <div className="error-message" role="alert">{error}</div>}
+          {error && (
+            <div className="error-message" role="alert">
+              {error}
+              <button type="button" onClick={() => setError("")} aria-label="Dismiss">×</button>
+            </div>
+          )}
 
-          {showGreeting && (
+          {showGreeting && !streaming && (
             <div className="suggestion-row">
               {suggestions.map(({ icon: Icon, text }) => (
                 <button className="suggestion-card" key={text} type="button" onClick={() => ask(text)}>
@@ -439,8 +464,8 @@ function App() {
             </div>
           )}
 
-          <form className="prompt-bar" onSubmit={submit}>
-            <button className="attach-button" type="button" aria-label="Upload documents" disabled={isUploading} onClick={() => fileInput.current?.click()}>
+          <form className="prompt-bar" onSubmit={(event) => { event.preventDefault(); ask(query); }}>
+            <button className="attach-button" type="button" aria-label="Upload documents" disabled={uploadProgress !== null} onClick={() => fileInput.current?.click()}>
               <Paperclip size={17} />
             </button>
             <textarea
@@ -448,19 +473,27 @@ function App() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); submit(event); }
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  ask(query);
+                }
               }}
               placeholder="Ask about your documents"
               rows={1}
+              maxLength={4000}
             />
-            <button className="send-button" type="submit" aria-label="Send" disabled={!query.trim() || isGenerating}>
-              <ArrowUp size={18} />
-            </button>
+            {streaming ? (
+              <button className="send-button stop" type="button" aria-label="Stop answering" onClick={() => abortRef.current?.abort()}>
+                <Square size={14} fill="currentColor" />
+              </button>
+            ) : (
+              <button className="send-button" type="submit" aria-label="Send" disabled={!query.trim()}>
+                <ArrowUp size={18} />
+              </button>
+            )}
           </form>
         </div>
       </div>
     </div>
   );
 }
-
-export default App;

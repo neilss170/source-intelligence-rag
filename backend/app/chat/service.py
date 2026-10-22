@@ -204,7 +204,20 @@ class ChatService:
         replay = _replay(history)
         question = turn.question
         ready = [f for f in files if f.status == "ready"]
+        indexing = [f for f in files if f.status in ("uploaded", "indexing")]
 
+        if turn.scope != "general" and not ready and indexing:
+            # Answering as general chat here reads as "your file says nothing
+            # about that". Say the file isn't ready yet instead.
+            names = ", ".join(f.filename for f in indexing[:3])
+            outcome.content = (
+                f"{names} {'is' if len(indexing) == 1 else 'are'} still being "
+                "indexed. Ask again in a moment and I'll answer from "
+                f"{'it' if len(indexing) == 1 else 'them'}."
+            )
+            outcome.mode = "indexing"
+            yield sse("token", {"text": outcome.content})
+            return
         if turn.scope == "workspace" and not ready:
             outcome.content, outcome.mode = EMPTY_WORKSPACE, "empty_workspace"
             yield sse("token", {"text": EMPTY_WORKSPACE})
