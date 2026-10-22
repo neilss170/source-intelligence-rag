@@ -19,6 +19,15 @@ class Settings(BaseSettings):
     app_host: str = "127.0.0.1"
     app_port: int = 8000
     frontend_origin: str = "http://localhost:5173"
+    # Postgres with pgvector; docker compose publishes it on 5433.
+    database_url: str = (
+        "postgresql+psycopg://si:si_dev_password@127.0.0.1:5433/source_intelligence"
+    )
+    redis_url: str = "redis://127.0.0.1:6380/0"
+    # Session cookies are Secure (HTTPS only) everywhere but development.
+    cookie_secure: bool | None = None
+    session_days: int = Field(default=30, ge=1, le=365)
+    min_password_length: int = Field(default=10, ge=8, le=128)
     max_file_size_mb: int = Field(default=10, ge=1, le=100)
     max_upload_files: int = Field(default=10, ge=1, le=50)
     chat_api_key: str | None = None
@@ -57,6 +66,12 @@ class Settings(BaseSettings):
     search_country: str = "india"
     search_max_results: int = Field(default=3, ge=1, le=5)
     data_dir: Path = BACKEND_DIR / "data"
+
+    @property
+    def secure_cookies(self) -> bool:
+        if self.cookie_secure is not None:
+            return self.cookie_secure
+        return self.app_env != "development"
 
     @property
     def fallback_models(self) -> tuple[str, ...]:

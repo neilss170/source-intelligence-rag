@@ -46,15 +46,32 @@ documented in [docs/ANSWERABILITY_EXPERIMENT.md](docs/ANSWERABILITY_EXPERIMENT.m
 
 ## Quick start
 
-### Backend
+### Everything in Docker
 
 ```powershell
+Copy-Item backend\.env.example backend\.env   # then add your CHAT_API_KEY
+docker compose up --build
+```
+
+Open `http://localhost:8080`. Postgres (with pgvector), Redis, the API and the
+web app all run as containers; migrations apply when the API starts.
+
+### Backend
+
+Start the database and Redis, then run the API on your machine:
+
+```powershell
+docker compose up -d db redis
 cd backend
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 Copy-Item .env.example .env
+.\.venv\Scripts\python.exe -m alembic upgrade head
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
 ```
+
+The test suite uses a separate `source_intelligence_test` database, created
+when the database container first starts.
 
 The API runs at `http://127.0.0.1:8000`. Interactive API documentation is at
 `http://127.0.0.1:8000/docs`.
