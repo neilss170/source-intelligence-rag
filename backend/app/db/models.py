@@ -9,8 +9,10 @@ can be added later without migrating anyone's data.
 import uuid
 from datetime import date, datetime
 
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     BigInteger,
+    Computed,
     Date,
     DateTime,
     ForeignKey,
@@ -19,11 +21,15 @@ from sqlalchemy import (
     LargeBinary,
     String,
     Text,
+    UniqueConstraint,
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+#: Dimensions of BAAI/bge-small-en-v1.5 embeddings.
+EMBEDDING_DIMENSIONS = 384
 
 
 class Base(DeclarativeBase):
@@ -153,3 +159,100 @@ class UsageDaily(Base):
     requests: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     tokens_in: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
     tokens_out: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+
+
+class Document(Base):
+    """An uploaded file and the state of its indexing."""
+
+    __tablename__ = "documents"
+    __table_args__ = (
+        # Re-uploading the same bytes to a workspace returns the existing row.
+        UniqueConstraint(
+            "workspace_id", "checksum", name="uq_documents_workspace_checksum"
+        ),
+        Index("ix_documents_workspace_created", "workspace_id", "created_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=_uuid)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE")
+    )
+    filename: Mapped[str] = mapped_column(String(255))
+    #: Lower-case extension including the dot, e.g. ".pdf".
+    kind: Mapped[str] = mapped_column(String(16))
+    size_bytes: Mapped[int] = mapped_column(BigInteger)
+    checksum: Mapped[str] = mapped_column(String(64))
+    #: Where the original bytes live in object storage. Random, never derived
+    #: from the filename.
+    storage_key: Mapped[str] = mapped_column(String(255))
+    #: uploaded -> indexing -> ready | failed
+    status: Mapped[str] = mapped_column(String(16), default="uploaded")
+    error: Mapped[str | None] = mapped_column(Text)
+    page_count: Mapped[int | None] = mapped_column(Integer)
+    passage_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    indexed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class Passage(Base):
+    """A retrievable, citable stretch of a document."""
+
+    __tablename__ = "passages"
+    __table_args__ = (
+        Index("ix_passages_document_ordinal", "document_id", "ordinal"),
+        Index("ix_passages_tsv", "tsv", postgresql_using="gin"),
+        Index(
+            "ix_passages_embedding",
+            "embedding",
+            postgresql_using="hnsw",
+            postgresql_ops={"embedding": "vector_cosine_ops"},
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=_uuid)
+    #: Copied from the document so search filters on one column.
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE")
+    )
+    ordinal: Mapped[int] = mapped_column(Integer)
+    page: Mapped[int | None] = mapped_column(Integer)
+    #: "Report > Safety" - the headings above the passage.
+    heading: Mapped[str] = mapped_column(Text, default="", server_default="")
+    #: "<file stem> > <heading>", shown with every citation.
+    title: Mapped[str] = mapped_column(Text)
+    text: Mapped[str] = mapped_column(Text)
+    text_hash: Mapped[str] = mapped_column(String(40))
+    embedding: Mapped[list[float]] = mapped_column(Vector(EMBEDDING_DIMENSIONS))
+    #: Keyword index; the title weighs more than the body.
+    tsv: Mapped[str] = mapped_column(
+        TSVECTOR,
+        Computed(
+            "setweight(to_tsvector('english'::regconfig, coalesce(title, '')), 'A') || "
+            "setweight(to_tsvector('english'::regconfig, coalesce(text, '')), 'B')",
+            persisted=True,
+        ),
+    )
+
+
+class DocumentTable(Base):
+    """One sheet of an uploaded CSV or XLSX, kept for the SQL tool."""
+
+    __tablename__ = "document_tables"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=_uuid)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    #: Empty for a CSV; the worksheet name for XLSX.
+    sheet: Mapped[str] = mapped_column(String(255), default="", server_default="")
+    #: Header row first, then the data rows, as read from the file.
+    rows: Mapped[list] = mapped_column(JSONB)
+    row_count: Mapped[int] = mapped_column(Integer)

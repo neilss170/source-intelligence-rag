@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     min_password_length: int = Field(default=10, ge=8, le=128)
     max_file_size_mb: int = Field(default=10, ge=1, le=100)
     max_upload_files: int = Field(default=10, ge=1, le=50)
+    max_workspace_mb: int = Field(default=200, ge=1)
+    # Where uploaded files are kept; defaults to <DATA_DIR>/files.
+    storage_dir: Path | None = None
     chat_api_key: str | None = None
     chat_api_base_url: str = "https://api.openai.com/v1"
     chat_model: str = "gpt-4.1-mini"
@@ -80,6 +83,10 @@ class Settings(BaseSettings):
             for model in self.chat_fallback_models.split(",")
             if model.strip()
         )
+
+    @property
+    def files_dir(self) -> Path:
+        return self.storage_dir or self.data_dir / "files"
 
     @property
     def uploads_dir(self) -> Path:

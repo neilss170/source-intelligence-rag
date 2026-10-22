@@ -71,14 +71,30 @@ class QueryResult:
 class TableStore:
     def __init__(self, files: list[tuple[str, str, Path]]) -> None:
         """Load ``(document_id, filename, path)`` spreadsheets into SQLite."""
+        self._open()
+        for document_id, filename, path in files:
+            for sheet, rows in read_sheets(path):
+                if len(rows) >= 2:
+                    self._load(document_id, filename, sheet, rows)
+        self._lock_down()
+
+    @classmethod
+    def from_sheets(cls, sheets: list[tuple[str, str, str, list]]) -> "TableStore":
+        """Load ``(document_id, filename, sheet, rows)`` already read from files."""
+        store = cls.__new__(cls)
+        store._open()
+        for document_id, filename, sheet, rows in sheets:
+            if len(rows) >= 2:
+                store._load(document_id, filename, sheet, rows)
+        store._lock_down()
+        return store
+
+    def _open(self) -> None:
         self._connection = sqlite3.connect(":memory:", check_same_thread=False)
         self._lock = threading.Lock()
         self.tables: list[Table] = []
-        for document_id, filename, path in files:
-            for sheet, rows in _read(path):
-                if len(rows) < 2:
-                    continue
-                self._load(document_id, filename, sheet, rows)
+
+    def _lock_down(self) -> None:
         self._connection.execute("PRAGMA query_only = ON")
         self._connection.set_authorizer(_authorize)
 
@@ -165,7 +181,8 @@ def _authorize(action, *_args) -> int:
     return sqlite3.SQLITE_OK if action in _ALLOWED_ACTIONS else sqlite3.SQLITE_DENY
 
 
-def _read(path: Path) -> list[tuple[str, list]]:
+def read_sheets(path: Path) -> list[tuple[str, list]]:
+    """Every sheet of a CSV or XLSX as ``(sheet name, rows)``, header row first."""
     if path.suffix.lower() == ".csv":
         with path.open(encoding="utf-8-sig", newline="") as handle:
             return [("", list(csv.reader(handle)))]
