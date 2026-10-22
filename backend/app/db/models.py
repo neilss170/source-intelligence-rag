@@ -7,7 +7,7 @@ can be added later without migrating anyone's data.
 """
 
 import uuid
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
@@ -190,8 +190,12 @@ class Document(Base):
     error: Mapped[str | None] = mapped_column(Text)
     page_count: Mapped[int | None] = mapped_column(Integer)
     passage_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    #: Set per row in Python: now() is fixed for a whole transaction, which
+    #: would give every file of one upload the same time and lose their order.
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        server_default=func.now(),
     )
     indexed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 

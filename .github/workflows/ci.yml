@@ -53,6 +53,13 @@ jobs:
           alembic upgrade head
           alembic check
       - run: pytest backend/tests
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-models-bge-small-msmarco-minilm-v1
+      - name: Retrieval gate (real models, no API key)
+        working-directory: backend
+        run: python scripts/evaluate_documents.py --name ci-retrieval --backend postgres --gate
 
   frontend:
     runs-on: ubuntu-latest

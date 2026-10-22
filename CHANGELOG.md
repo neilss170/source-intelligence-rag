@@ -89,3 +89,33 @@ keeps the gap visible, and that list must be empty when milestone 4 is done.
 document API, so it can't list or upload documents until the new sign-in UI
 lands in milestone 5. `/api/query` still answers from the prototype's file
 index until milestone 4.
+
+## Milestone 3: Retrieval (2026-10-22)
+
+- **Search runs in Postgres, per workspace.** The measured pipeline is reused
+  unchanged: keyword and vector candidates (20 each), fused by reciprocal
+  rank, then reranked by the cross-encoder, with probability ≥ 0.02 and the
+  best 3 always kept. Only the two candidate sources are new
+  (`app/retrieval/pg.py`):
+  - **Keyword:** the weighted full-text column. Question words are OR-ed, so
+    a passage doesn't need every word of a natural question, and identifiers
+    like `SH-0042` still match exactly.
+  - **Vector:** cosine distance on the HNSW index. pgvector's iterative scan
+    is on, so filtering to one workspace never leaves the list short.
+- **Gate met on the first run, with the same scores as the measured
+  in-memory version:** recall@k 1.000, recall@1 0.950, MRR 0.975 over the 40
+  fact questions; median 670 ms per search on CPU (570 ms in memory).
+  `scripts/evaluate_documents.py --backend postgres --gate` indexes the
+  corpus through the real worker pipeline into a throwaway workspace and
+  fails below recall@k 0.95 or MRR 0.90. CI now runs it on every push with
+  cached models.
+- **Workspace helpers** for the next milestone: the file overview the model
+  always sees, every passage in reading order with its size (for the "send
+  the whole workspace" path), and the workspace's spreadsheets as a
+  locked-down SQLite store loaded from the database.
+- **Fixed:** files uploaded together shared one `created_at` (Postgres
+  `now()` is fixed per transaction), so their order was random. Each document
+  is now timestamped as it is inserted.
+- **Tests:** 8 new, 167 in total. They cover OR semantics, exact
+  identifiers, no results across workspaces for either search, the score
+  floor, empty queries, and the helpers.

@@ -1,0 +1,334 @@
+{
+  "backend": "postgres",
+  "retrieval": {
+    "questions": 40,
+    "recall_at_k": 1.0,
+    "recall_at_1": 0.95,
+    "mrr": 0.975,
+    "mean_passages_returned": 3.15,
+    "p50_ms": 669.5,
+    "misses": [],
+    "rows": [
+      {
+        "id": "d01",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 734
+      },
+      {
+        "id": "d02",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 736
+      },
+      {
+        "id": "d03",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 677
+      },
+      {
+        "id": "d04",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 687
+      },
+      {
+        "id": "d05",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 691
+      },
+      {
+        "id": "d06",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 739
+      },
+      {
+        "id": "d07",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 694
+      },
+      {
+        "id": "d08",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": false,
+        "reciprocal_rank": 0.5,
+        "ms": 635
+      },
+      {
+        "id": "d09",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 678
+      },
+      {
+        "id": "d10",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 724
+      },
+      {
+        "id": "d11",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 702
+      },
+      {
+        "id": "d12",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 670
+      },
+      {
+        "id": "d13",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 669
+      },
+      {
+        "id": "d14",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 699
+      },
+      {
+        "id": "d15",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 610
+      },
+      {
+        "id": "d16",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 585
+      },
+      {
+        "id": "d17",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 610
+      },
+      {
+        "id": "d18",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 673
+      },
+      {
+        "id": "d19",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 665
+      },
+      {
+        "id": "d20",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 585
+      },
+      {
+        "id": "d21",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 607
+      },
+      {
+        "id": "d22",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 629
+      },
+      {
+        "id": "d23",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 690
+      },
+      {
+        "id": "d24",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 710
+      },
+      {
+        "id": "d25",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": false,
+        "reciprocal_rank": 0.5,
+        "ms": 644
+      },
+      {
+        "id": "d26",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 704
+      },
+      {
+        "id": "d27",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 609
+      },
+      {
+        "id": "d28",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 605
+      },
+      {
+        "id": "d29",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 604
+      },
+      {
+        "id": "d30",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 413
+      },
+      {
+        "id": "d31",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 326
+      },
+      {
+        "id": "d32",
+        "hits": 4,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 677
+      },
+      {
+        "id": "d33",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 662
+      },
+      {
+        "id": "d34",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 700
+      },
+      {
+        "id": "d35",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 660
+      },
+      {
+        "id": "d36",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 675
+      },
+      {
+        "id": "d37",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 683
+      },
+      {
+        "id": "d38",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 490
+      },
+      {
+        "id": "d39",
+        "hits": 3,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 606
+      },
+      {
+        "id": "d45",
+        "hits": 8,
+        "recall_at_k": true,
+        "recall_at_1": true,
+        "reciprocal_rank": 1.0,
+        "ms": 201
+      }
+    ]
+  }
+}
