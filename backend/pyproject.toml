@@ -8,7 +8,8 @@ version = "0.1.0"
 description = "Document-grounded question answering API"
 requires-python = ">=3.11"
 dependencies = [
-  "fastapi>=0.115,<1.0",
+  # 0.137+ keeps included routes unprefixed, which breaks route-template metrics.
+  "fastapi>=0.115,<0.137",
   "httpx>=0.28,<1.0",
   "sentence-transformers>=3.4,<6.0",
   "pymupdf>=1.25,<2.0",
