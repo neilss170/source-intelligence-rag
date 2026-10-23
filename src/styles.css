@@ -530,8 +530,69 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 
-.answer-copy p + p {
+.answer-copy > * + * {
   margin-top: 14px;
+}
+
+.answer-copy h3 {
+  margin-bottom: 0;
+  font-family: Manrope, sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.answer-copy > h3 + * {
+  margin-top: 6px;
+}
+
+.answer-copy ul,
+.answer-copy ol {
+  margin-bottom: 0;
+  padding-left: 22px;
+  color: rgba(243, 245, 255, 0.9);
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.answer-copy li + li {
+  margin-top: 4px;
+}
+
+.answer-copy strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.answer-copy code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--panel-strong);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.88em;
+}
+
+.md-table {
+  overflow-x: auto;
+}
+
+.md-table table {
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.md-table th,
+.md-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.md-table th {
+  color: var(--muted);
+  font-weight: 600;
 }
 
 .cite-mark {

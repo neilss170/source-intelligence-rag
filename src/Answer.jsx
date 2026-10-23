@@ -1,14 +1,6 @@
 import { useState } from "react";
 import { Check, ChevronDown, Copy, RotateCcw } from "lucide-react";
-
-// Answer text marks its sources as [1], [2]; show them as small numbers that
-// match the source list below the answer.
-function withCitationMarks(text) {
-  return text.split(/(\[\d+\])/g).map((part, index) => {
-    const match = /^\[(\d+)\]$/.exec(part);
-    return match ? <sup className="cite-mark" key={index}>{match[1]}</sup> : part;
-  });
-}
+import { Markdown } from "./markdown";
 
 export function Answer({ message, onRetry }) {
   const [showSources, setShowSources] = useState(false);
@@ -57,9 +49,7 @@ export function Answer({ message, onRetry }) {
     <article className="answer" aria-busy={message.streaming || undefined}>
       {content && (
         <div className="answer-copy">
-          {content.split("\n\n").map((paragraph, index) => (
-            <p key={index}>{withCitationMarks(paragraph)}</p>
-          ))}
+          <Markdown text={content} />
           {message.streaming && <span className="caret" aria-hidden="true" />}
         </div>
       )}
